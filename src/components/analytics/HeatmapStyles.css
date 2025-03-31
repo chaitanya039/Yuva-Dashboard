@@ -1,0 +1,38 @@
+/* Base invisible marker with border */
+.custom-marker {
+    background: transparent !important;
+    border: none !important;
+  }
+  
+  /* Optional: add colored dot for each customer type */
+  .custom-marker::before {
+    content: "";
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .custom-marker.retailer::before {
+    border-color: #2563eb; /* blue-600 */
+  }
+  
+  .custom-marker.wholesaler::before {
+    border-color: #dc2626; /* red-600 */
+  }
+  
+  /* Always-visible tooltip styling */
+  .leaflet-tooltip.tooltip-box {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 4px 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    font-size: 12px;
+  }
+  
