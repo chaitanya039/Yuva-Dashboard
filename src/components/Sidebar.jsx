@@ -23,7 +23,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { BsPeople } from "react-icons/bs";
 import { MdAddShoppingCart, MdPayment } from "react-icons/md";
 import { BiShoppingBag } from "react-icons/bi";
-import { FaMoneyBillWave } from "react-icons/fa";
+import { FaMoneyBillWave, FaUserFriends } from "react-icons/fa";
 
 const Sidebar = () => {
   const dispatch = useDispatch();
@@ -53,6 +53,14 @@ const Sidebar = () => {
         { label: "Reports", to: "/reports", icon: Receipt }, // Add later if needed
       ],
     },
+    {
+      section: "Users",
+      items: [
+        {
+          label: "User Management", to: "/users", icon: FaUserFriends
+        }
+      ]
+    }
   ];
 
   const handleLogout = () => {
