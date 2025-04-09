@@ -1,23 +1,16 @@
+// ✅ ViewOrderModal.jsx — Enhanced with Discount per Product, Net Payable, Styled Payment Status
+
 import React, { useState } from "react";
 import Modal from "react-modal";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import moment from "moment";
 
-import {
-  FaTrash,
-  FaEdit,
-  FaPrint,
-  FaCheckCircle,
-  FaClock,
-  FaHourglassHalf,
-} from "react-icons/fa";
-import { BsDot } from "react-icons/bs";
+import { FaTrash, FaEdit, FaPrint } from "react-icons/fa";
 
 import { deleteOrder, fetchOrders } from "../../features/orderSlice";
 import customModalStyles from "../../utils/CustomModalStyles";
 import { exportInvoicePdf } from "../../features/invoiceSlice";
-
 
 const statusMap = {
   Pending: {
@@ -54,14 +47,12 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
 
   const handlePrint = async () => {
     const res = await dispatch(exportInvoicePdf(order.order._id));
-  
     if (res.meta.requestStatus === "fulfilled") {
       toast.success("Invoice downloaded successfully");
     } else {
       toast.error(res.payload || "Failed to generate invoice");
     }
   };
-  
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -77,8 +68,11 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
     }
   };
 
-  const getTotal = () =>
+  const getSubtotal = () =>
     order.items.reduce((sum, item) => sum + item.totalPrice, 0);
+
+  const payment = order.order?.payment || {};
+  const netPayable = order.order?.netPayable || 0;
 
   return (
     <Modal
@@ -93,7 +87,6 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
       )}
     >
       <div className="p-6">
-        {/* Header */}
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-800">
             Order <span className="text-blue-600">{order.order.orderId}</span>
@@ -116,11 +109,9 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {/* Left Column */}
           <div className="md:col-span-2 space-y-6">
-            {/* Order Items */}
-            <div className="border rounded-md">
-              <div className="border-b px-4 py-2 font-semibold text-gray-700 bg-gray-50">
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-gray-100 px-4 py-2 font-medium text-gray-800 border-b">
                 Order Items
               </div>
               <div className="divide-y">
@@ -130,12 +121,11 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
                     className="p-4 flex justify-between items-center gap-4"
                   >
                     <div className="flex items-center gap-3">
-                      {/* Image or SKU initials */}
                       {item.product?.image ? (
                         <img
                           src={item.product.image}
                           alt={item.product.name}
-                          className="w-10 h-10 object-cover rounded-full"
+                          className="w-10 h-10 rounded-full object-cover border"
                         />
                       ) : (
                         <div className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 font-medium text-sm">
@@ -149,33 +139,85 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
                             : "NA"}
                         </div>
                       )}
-
                       <div>
-                        <div className="font-medium">
-                          {item.product?.name || "Unnamed Product"}
+                        <div className="font-medium text-sm text-gray-900">
+                          {item.product?.name}
                         </div>
                         <div className="text-xs text-gray-500">
                           SKU: {item.product?.sku || "—"}
                         </div>
                       </div>
                     </div>
-
                     <div className="text-right text-sm">
-                      <div>₹{item.unitPrice.toLocaleString()}</div>
+                      <div className="line-through text-gray-400">
+                        ₹{item.unitPrice.toLocaleString()}
+                      </div>
                       <div>x{item.quantity}</div>
-                      <div className="font-semibold">
+                      <div className="font-semibold text-gray-900">
                         ₹{item.totalPrice.toLocaleString()}
                       </div>
                     </div>
                   </div>
                 ))}
-                <div className="p-4 text-right font-semibold bg-gray-50">
-                  Total: ₹{getTotal().toLocaleString()}
+                <div className="p-4 text-right text-sm bg-gray-50 space-y-1">
+                  <div className="text-gray-800">
+                    Subtotal: ₹{getSubtotal().toLocaleString()}
+                  </div>
+                  <div className="text-gray-800">
+                    Discount: ₹{order.order.discount?.toLocaleString() || 0}
+                  </div>
+                  <div className="font-semibold text-base text-black">
+                    Net Payable: ₹{netPayable.toLocaleString()}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Order History */}
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-gray-100 px-4 py-2 font-medium text-gray-800 border-b">
+                Payment Information
+              </div>
+              <div className="p-4 text-sm text-gray-800 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-full bg-gray-800"></span>
+                    Amount Paid
+                  </span>
+                  <span className="font-medium">
+                    ₹{payment.amountPaid?.toLocaleString() || 0}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-full bg-gray-600"></span>
+                    Remaining Balance
+                  </span>
+                  <span className="font-medium">
+                    ₹{payment.balanceRemaining?.toLocaleString() || 0}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={`h-3 w-3 rounded-full ${
+                        payment.status === "Paid"
+                          ? "bg-green-700"
+                          : payment.status === "Partially Paid"
+                          ? "bg-yellow-600"
+                          : "bg-red-500"
+                      }`}
+                    ></span>
+                    Payment Status
+                  </span>
+                  <span className="font-semibold capitalize">
+                    {payment.status || "—"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <div className="border rounded-md">
               <div className="border-b px-4 py-2 font-semibold text-gray-700 bg-gray-50">
                 Order History
@@ -183,18 +225,13 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
               <div className="px-4 py-3 space-y-3 text-sm text-gray-700">
                 {order.order.statusHistory?.map((entry, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    {statusMap[entry.status] && (
-                      <span
-                        className={`text-lg mt-0.5`}
-                        title={statusMap[entry.status].tooltip}
-                      >
-                        {statusMap[entry.status].icon}
-                      </span>
-                    )}
+                    <span className="text-lg mt-0.5">
+                      {statusMap[entry.status]?.icon}
+                    </span>
                     <div>
                       <div className="font-medium">{entry.status}</div>
                       <div className="text-xs text-gray-500">
-                        {moment(entry.date).format("MMM DD, YYYY, h:mm A")}
+                        {moment(entry.changedAt).format("MMM DD, YYYY, h:mm A")}
                       </div>
                     </div>
                   </div>
@@ -202,7 +239,6 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
               </div>
             </div>
 
-            {/* Notes */}
             {order.order.specialInstructions && (
               <div className="border rounded-md">
                 <div className="border-b px-4 py-2 font-semibold text-gray-700 bg-gray-50">
@@ -215,9 +251,7 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
             )}
           </div>
 
-          {/* Right Column */}
           <div className="space-y-6">
-            {/* Customer Info */}
             <div className="border rounded-md">
               <div className="border-b px-4 py-2 font-semibold text-gray-700 bg-gray-50">
                 Customer Information
@@ -238,7 +272,6 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
                       .toUpperCase()}
                   </div>
                 )}
-
                 <div>
                   <div className="font-semibold text-gray-900">
                     {order.order.customer?.name || "N/A"}
@@ -256,7 +289,6 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
               </div>
             </div>
 
-            {/* Actions */}
             <div className="border rounded-md">
               <div className="border-b px-4 py-2 font-semibold text-gray-700 bg-gray-50">
                 Actions
@@ -311,8 +343,7 @@ const ViewOrderModal = ({ isOpen, onClose, order, onEdit }) => {
                     </>
                   ) : (
                     <>
-                      <FaTrash />
-                      Delete Order
+                      <FaTrash /> Delete Order
                     </>
                   )}
                 </button>

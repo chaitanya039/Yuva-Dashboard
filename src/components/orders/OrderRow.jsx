@@ -1,6 +1,6 @@
 import React from "react";
 import moment from "moment";
-import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import { FaEye, FaEdit, FaTrash, FaPrint } from "react-icons/fa";
 
 const statusMap = {
   Pending: {
@@ -29,7 +29,7 @@ const statusMap = {
   },
 };
 
-const OrderRow = ({ order, onView, onStatusChange, onDelete, onEdit }) => {
+const OrderRow = ({ order, onView, onDelete, onEdit, onPrint }) => {
   const customerName = order.customer?.name || "N/A";
   const customerType = order.customer?.type || "—";
   const profileImg = order.customer?.profileImg || "";
@@ -39,11 +39,14 @@ const OrderRow = ({ order, onView, onStatusChange, onDelete, onEdit }) => {
     .join("")
     .toUpperCase();
 
+  const amountPaid = order?.payment?.amountPaid || 0;
+  const netPayable = order?.netPayable || order?.totalAmount || 0;
+
   return (
     <tr className="hover:bg-gray-50 transition">
       {/* Order ID */}
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-        {order.orderId}
+        {order?.orderId}
       </td>
 
       {/* Customer Info */}
@@ -71,33 +74,75 @@ const OrderRow = ({ order, onView, onStatusChange, onDelete, onEdit }) => {
 
       {/* Date */}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        {moment(order.createdAt).format("MMM DD, YYYY")}
+        {moment(order?.createdAt).format("MMM DD, YYYY")}
       </td>
 
-      {/* Total Amount */}
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-        ₹{order?.totalAmount?.toLocaleString()}
+      {/* Total Column */}
+      <td className="px-6 py-2 whitespace-nowrap text-sm text-left leading-tight">
+        <div className="space-y-0.5 text-[13px]">
+          <div className="text-gray-600 line-through">
+            ₹{order?.totalAmount.toLocaleString()}
+          </div>
+          <div className="font-semibold text-gray-900">
+            ₹{order?.netPayable.toLocaleString()}
+          </div>
+          {order?.discount > 0 && (
+            <div className="text-[11px] text-red-500">
+              -{((order?.discount / order?.totalAmount) * 100).toFixed(0)}%
+            </div>
+          )}
+        </div>
       </td>
 
-      {/* Status Dropdown */}
-      <td className="px-6 py-4 whitespace-nowrap">
-        <select
-          value={order?.status}
-          onChange={(e) => onStatusChange(order._id, e.target.value)}
-          className={`text-xs font-medium rounded-full px-3 py-1 border focus:outline-none
-            ${statusMap[order?.status]?.className}`}
+      {/* Paid / NetPayable + Status */}
+      <td className="px-6 py-4 whitespace-nowrap text-sm min-w-[160px]">
+        <div className="font-medium text-gray-900">
+          ₹{amountPaid.toLocaleString()}{" "}
+          <span className="text-gray-500">/</span> ₹
+          {netPayable.toLocaleString()}
+        </div>
+        <div className="relative w-full h-1.5 mt-1 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className={`absolute top-0 left-0 h-full rounded-full ${
+              order?.payment.status === "Paid"
+                ? "bg-green-600"
+                : order?.payment.status === "Partially Paid"
+                ? "bg-yellow-500"
+                : "bg-red-500"
+            }`}
+            style={{
+              width: `${Math.min((amountPaid / netPayable) * 100, 100)}%`,
+            }}
+          />
+        </div>
+        <div className="mt-2 flex items-center justify-between text-xs">
+          <span
+            className={`inline-block font-medium ${
+              order?.payment.status === "Paid"
+                ? "text-green-700 border-green-600"
+                : order?.payment.status === "Partially Paid"
+                ? "text-yellow-700 border-yellow-500"
+                : "text-red-700 border-red-500"
+            }`}
+          >
+            {order?.payment.status || "Unpaid"}
+          </span>
+          <span className="text-gray-500 ml-2">
+            {Math.round((amountPaid / netPayable) * 100)}%
+          </span>
+        </div>
+      </td>
+
+      {/* Status */}
+      <td className="px-6 py-4 whitespace-nowrap text-sm">
+        <span
+          title={statusMap[order.status]?.tooltip}
+          className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-medium rounded-full ${
+            statusMap[order.status]?.className || "bg-gray-100 text-gray-600"
+          }`}
         >
-          <option value="Pending">{statusMap["Pending"].icon} Pending</option>
-          <option value="Processing">
-            {statusMap["Processing"].icon} Processing
-          </option>
-          <option value="Completed">
-            {statusMap["Completed"].icon} Completed
-          </option>
-          <option value="Cancelled">
-            {statusMap["Cancelled"].icon} Cancelled
-          </option>
-        </select>
+          {statusMap[order.status]?.icon} {statusMap[order.status]?.text}
+        </span>
       </td>
 
       {/* Actions */}
@@ -109,6 +154,13 @@ const OrderRow = ({ order, onView, onStatusChange, onDelete, onEdit }) => {
             className="cursor-pointer flex items-center justify-center w-9 h-9 text-blue-600 border border-blue-400 hover:bg-blue-100 rounded-full transition duration-200"
           >
             <FaEye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => onPrint(order)} // ✅ New Print button
+            title="Print Invoice"
+            className="cursor-pointer flex items-center justify-center w-9 h-9 text-indigo-600 border border-indigo-400 hover:bg-indigo-100 rounded-full transition duration-200"
+          >
+            <FaPrint className="w-4 h-4" />
           </button>
           <button
             onClick={() => onEdit(order)}

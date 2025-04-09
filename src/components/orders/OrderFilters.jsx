@@ -68,9 +68,7 @@ const OrderFilters = ({
         {/* Status */}
         <select
           value={filters.status}
-          onChange={(e) =>
-            onFilterChange({ status: e.target.value, page: 1 })
-          }
+          onChange={(e) => onFilterChange({ status: e.target.value, page: 1 })}
           className="w-full border border-gray-300 rounded-md px-3 py-2  shadow-sm focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="">All Statuses</option>
@@ -78,6 +76,20 @@ const OrderFilters = ({
           <option value="Processing">Processing</option>
           <option value="Completed">Completed</option>
           <option value="Cancelled">Cancelled</option>
+        </select>
+
+        {/* Payment Status */}
+        <select
+          value={filters.paymentStatus}
+          onChange={(e) =>
+            onFilterChange({ paymentStatus: e.target.value, page: 1 })
+          }
+          className="w-full border border-gray-300 rounded-md px-3 py-2 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">All Payment Status</option>
+          <option value="Unpaid">Unpaid</option>
+          <option value="Partially Paid">Partially Paid</option>
+          <option value="Paid">Paid</option>
         </select>
 
         {/* Sort Order */}

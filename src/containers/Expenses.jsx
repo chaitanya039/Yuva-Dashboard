@@ -130,7 +130,7 @@ const Expenses = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 md:p-6 lg:p-8" id="expenses">
+    <div className="min-h-screen bg-gray-100" id="expenses">
       <div className="mb-6">
         {/* Breadcrumb Style Heading */}
         <div className="mb-1">

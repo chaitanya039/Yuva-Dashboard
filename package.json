@@ -15,6 +15,7 @@
     "axios": "^1.8.4",
     "chart.js": "^4.4.8",
     "date-fns": "^4.1.0",
+    "framer-motion": "^12.6.3",
     "leaflet": "^1.9.4",
     "leaflet.heat": "^0.2.0",
     "lodash.debounce": "^4.0.8",

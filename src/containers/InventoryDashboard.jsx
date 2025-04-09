@@ -31,7 +31,7 @@ const InventoryDashboard = () => {
   }, [dispatch]);
 
   return (
-    <div className="space-y-8 min-h-screen bg-gray-100 p-4 md:p-6 lg:p-8" id="inventory">
+    <div className="space-y-8 min-h-screen bg-gray-100" id="inventory">
       {/* Breadcrumb */}
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Inventory</h1>

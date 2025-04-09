@@ -294,7 +294,7 @@ const Products = () => {
   }, [modalIsOpen]);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 md:p-6 lg:p-8" id="products">
+    <div className="min-h-screen bg-gray-100" id="products">
       {/* Header & Breadcrumbs */}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">

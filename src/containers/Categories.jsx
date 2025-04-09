@@ -125,7 +125,7 @@ const Categories = () => {
   );
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100" id="categories">
+    <div className="min-h-screen bg-gray-100" id="categories">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Categories</h1>

@@ -25,6 +25,7 @@ import ViewOrderModal from "../components/Modals/ViewOrderModal";
 import OrderRequestReviewModal from "../components/modals/OrderRequestReviewModal";
 import { toast } from "react-toastify";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { exportInvoicePdf } from "../features/invoiceSlice";
 
 const OrdersPage = () => {
   const dispatch = useDispatch();
@@ -181,35 +182,44 @@ const OrdersPage = () => {
 
   const activeFilters = activeTab === "All Orders" ? filters : requestFilters;
 
+  const handlePrintOrder = async (order) => {
+    const res = await dispatch(exportInvoicePdf(order._id));
+    if (res.meta.requestStatus === "fulfilled") {
+      toast.success("Invoice downloaded successfully");
+    } else {
+      toast.error(res.payload || "Failed to generate invoice");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 p-4 md:p-6 lg:p-8" id="orders">
+    <div className="min-h-screen bg-gray-100" id="orders">
       <div className="mb-3">
-            <h1 className="text-2xl font-bold text-gray-800">Orders</h1>
-            <nav className="text-sm text-gray-600 mt-1" aria-label="Breadcrumb">
-              <ol className="flex items-center space-x-1">
-                <li>
-                  <a href="#dashboard" className="hover:text-blue-600">
-                    Dashboard
-                  </a>
-                </li>
-                <li className="flex items-center space-x-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="font-medium">Orders</span>
-                </li>
-              </ol>
-            </nav>
-          </div>
+        <h1 className="text-2xl font-bold text-gray-800">Orders</h1>
+        <nav className="text-sm text-gray-600 mt-1" aria-label="Breadcrumb">
+          <ol className="flex items-center space-x-1">
+            <li>
+              <a href="#dashboard" className="hover:text-blue-600">
+                Dashboard
+              </a>
+            </li>
+            <li className="flex items-center space-x-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span className="font-medium">Orders</span>
+            </li>
+          </ol>
+        </nav>
+      </div>
 
       <OrdersTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
@@ -228,6 +238,7 @@ const OrdersPage = () => {
           orders={orders}
           onEdit={(order) => handleEditOrder(order._id)}
           onDelete={(orderId) => handleDeleteConfirm(orderId)}
+          onPrint={handlePrintOrder} // ✅ Add this line
         />
       )}
 
@@ -307,11 +318,11 @@ const OrdersPage = () => {
       )}
 
       <Pagination
-        currentPage={
-          activeTab === "All Orders" ? filters.page : requestFilters.page
-        }
+        currentPage={activeFilters.page}
         totalPages={totalPages}
         onPageChange={handlePageChange}
+        limit={activeFilters.limit}
+        totalItems={activeTab === "All Orders" ? totalOrders : totalRequests}
       />
 
       <CreateOrderModal
@@ -326,7 +337,7 @@ const OrdersPage = () => {
         onClose={handleCloseModals}
         order={currentOrder}
         onEdit={() => handleEditOrder(currentOrder?.order?._id)}
-        />
+      />
       <OrderRequestReviewModal
         isOpen={!!selectedRequest}
         onClose={() => setSelectedRequest(null)}

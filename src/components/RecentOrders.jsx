@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
 
 const statusMap = {
@@ -33,9 +34,9 @@ export const RecentOrders = ({ orders }) => (
   <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
     <div className="flex justify-between items-center mb-4">
       <h3 className="text-lg font-medium text-gray-700">Recent Orders</h3>
-      <a href="/orders" className="text-sm text-blue-600 hover:text-blue-800">
+      <Link to="/orders" className="text-sm text-blue-600 hover:text-blue-800">
         View all
-      </a>
+      </Link>
     </div>
 
     <div className="space-y-4">

@@ -104,13 +104,15 @@ const orderSlice = createSlice({
     deleting: false,
     filters: {
       page: 1,
-      limit: 10,
+      limit: 4,
       search: "",
       status: "",
       customerType: "",
+      paymentStatus: "", // ✅ added
       sortBy: "createdAt",
       sortOrder: "desc",
     },
+
     error: null,
   },
   reducers: {
@@ -119,11 +121,12 @@ const orderSlice = createSlice({
     },
     resetOrderFilters: (state) => {
       state.filters = {
+        ...state.filters, // 👈 retain the existing limit value
         page: 1,
-        limit: 10,
         search: "",
         status: "",
         customerType: "",
+        paymentStatus: "", // ✅ added
         sortBy: "createdAt",
         sortOrder: "desc",
       };

@@ -10,6 +10,7 @@ import reportsReducer from "../features/reportSlice";
 import listenerMiddleware from './listenerMiddleware';
 import customerReducer from "../features/customerSlice";
 import inventoryReducer from "../features/inventorySlice";
+import paymentReducer from "../features/paymentSlice";
 
 export const store = configureStore({
   reducer: {
@@ -22,7 +23,8 @@ export const store = configureStore({
     analytics: analyticsReducer,
     reports: reportsReducer,
     customers: customerReducer,
-    inventory: inventoryReducer
+    inventory: inventoryReducer,
+    payment: paymentReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().prepend(listenerMiddleware.middleware),

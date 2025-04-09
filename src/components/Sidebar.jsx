@@ -19,9 +19,9 @@ import {
   ShoppingBagIcon,
 } from "lucide-react";
 import logo from "../assets/logo2.png";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { BsPeople } from "react-icons/bs";
-import { MdAddShoppingCart } from "react-icons/md";
+import { MdAddShoppingCart, MdPayment } from "react-icons/md";
 import { BiShoppingBag } from "react-icons/bi";
 import { FaMoneyBillWave } from "react-icons/fa";
 
@@ -36,27 +36,21 @@ const Sidebar = () => {
     {
       section: "Main",
       items: [
-        { label: "Dashboard", to: "#dashboard", icon: LayoutDashboard },
-        { label: "Categories", to: "#categories", icon: Layers },
-        { label: "Products", to: "#products", icon: Package },
-        { label: "Customers", to: "#customers", icon: BsPeople },
-        { label: "Orders", to: "#orders", icon: ShoppingCart },
-        { label: "Inventory", to: "#inventory", icon: Warehouse },
-        { label: "Expenses", to: "#expenses", icon: FaMoneyBillWave },
+        { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
+        { label: "Categories", to: "/categories", icon: Layers },
+        { label: "Products", to: "/products", icon: Package },
+        { label: "Customers", to: "/customers", icon: BsPeople },
+        { label: "Orders", to: "/orders", icon: ShoppingCart },
+        { label: "Inventory", to: "/inventory", icon: Warehouse },
+        { label: "Expenses", to: "/expenses", icon: FaMoneyBillWave },
       ],
     },
     {
       section: "Reports",
       items: [
-        { label: "Analytics & Reports", to: "#analytics", icon: BarChart },
-        { label: "Invoices", to: "#invoices", icon: Receipt },
-      ],
-    },
-    {
-      section: "Administration",
-      items: [
-        { label: "User Management", to: "#user-management", icon: Users },
-        { label: "Settings", to: "#settings", icon: Settings },
+        { label: "Analytics", to: "/analytics", icon: BarChart },
+        { label: "Payment Analysis", to: "/payments", icon: MdPayment  },
+        { label: "Reports", to: "/reports", icon: Receipt }, // Add later if needed
       ],
     },
   ];
@@ -69,21 +63,23 @@ const Sidebar = () => {
   const renderLinks = (items) =>
     items.map(({ label, to, icon: Icon }) => (
       <li key={label}>
-        <a
-          href={to}
+        <NavLink
+          to={to}
+          className={({ isActive }) =>
+            `flex items-center px-2 py-2 mt-1 text-sm font-medium rounded-lg transition-colors duration-200 ${
+              isActive
+                ? "bg-blue-600 text-white"
+                : "text-gray-700 hover:text-blue-600 hover:bg-gray-100"
+            }`
+          }
           onClick={() => {
             setActiveSection(label);
             setIsMobileSidebarOpen(false);
           }}
-          className={`flex items-center px-2 py-2 mt-1 text-sm font-medium rounded-lg transition-colors duration-200 ${
-            activeSection === label
-              ? "bg-blue-600 text-white"
-              : "text-gray-700 hover:text-blue-600 hover:bg-gray-100"
-          }`}
         >
           <Icon className="h-5 w-5 mr-3" />
           {label}
-        </a>
+        </NavLink>
       </li>
     ));
 

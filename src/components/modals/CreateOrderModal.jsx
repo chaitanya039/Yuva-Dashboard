@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import customModalStyles from "../../utils/CustomModalStyles";
-import { FaTrash } from "react-icons/fa";
+import { FaTrash, FaCheck } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import {
   createOrder,
@@ -12,12 +12,7 @@ import { fetchCustomers } from "../../features/customerSlice";
 import { toast } from "react-toastify";
 import { fetchProducts } from "../../features/productSlice";
 
-const CreateOrderModal = ({
-  isOpen,
-  onClose,
-  isEdit = false,
-  initialData = null,
-}) => {
+const CreateOrderModal = ({ isOpen, onClose, isEdit = false, initialData = null }) => {
   const dispatch = useDispatch();
   const { customers } = useSelector((state) => state.customers);
   const { products } = useSelector((state) => state.products);
@@ -25,6 +20,7 @@ const CreateOrderModal = ({
   const [selectedCustomer, setSelectedCustomer] = useState("");
   const [note, setNote] = useState("");
   const [discount, setDiscount] = useState(0);
+  const [amountPaid, setAmountPaid] = useState(0);
   const [orderItems, setOrderItems] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState("");
 
@@ -37,6 +33,7 @@ const CreateOrderModal = ({
         setSelectedCustomer(initialData?.order?.customer?._id || "");
         setNote(initialData?.order?.specialInstructions || "");
         setDiscount(initialData?.order?.discount || 0);
+        setAmountPaid(initialData?.order?.payment?.amountPaid || 0);
         setOrderItems(
           initialData.items?.map((item) => ({
             product: item.product._id,
@@ -50,6 +47,7 @@ const CreateOrderModal = ({
         setSelectedCustomer("");
         setNote("");
         setDiscount(0);
+        setAmountPaid(0);
         setOrderItems([]);
       }
     }
@@ -61,48 +59,26 @@ const CreateOrderModal = ({
       const updatedItems = orderItems.map((item) => {
         const product = products.find((p) => p._id === item.product);
         if (!product) return item;
-        const price =
-          customer.type === "Wholesaler"
-            ? product.priceWholesale
-            : product.priceRetail;
-        return {
-          ...item,
-          price,
-        };
+        const price = customer.type === "Wholesaler" ? product.priceWholesale : product.priceRetail;
+        return { ...item, price };
       });
       setOrderItems(updatedItems);
     }
   }, [selectedCustomer]);
 
   const handleAddProduct = () => {
-    const existing = orderItems.find(
-      (item) => item.product === selectedProductId
-    );
-    if (existing) return toast.warn("Product already added");
+    const exists = orderItems.find((item) => item.product === selectedProductId);
+    if (exists) return toast.warn("Product already added");
 
     const product = products.find((p) => p._id === selectedProductId);
     const customer = customers.find((c) => c._id === selectedCustomer);
     if (!product || !customer) return;
 
-    if (product.stock <= 0) {
-      return toast.warn("Product is out of stock");
-    }
+    if (product.stock <= 0) return toast.warn("Product is out of stock");
 
-    const price =
-      customer.type === "Wholesaler"
-        ? product.priceWholesale
-        : product.priceRetail;
+    const price = customer.type === "Wholesaler" ? product.priceWholesale : product.priceRetail;
 
-    setOrderItems((prev) => [
-      ...prev,
-      {
-        product: product._id,
-        name: product.name,
-        price,
-        image: product.image,
-        quantity: 1,
-      },
-    ]);
+    setOrderItems((prev) => [...prev, { product: product._id, name: product.name, price, image: product.image, quantity: 1 }]);
   };
 
   const handleQuantityChange = (index, value) => {
@@ -114,29 +90,14 @@ const CreateOrderModal = ({
     if (!product) return;
 
     const currentStock = product.stock;
+    const originalQty = initialData?.items?.find((item) => item.product._id === productId)?.quantity || 0;
+    const maxAllowed = currentStock + (isEdit ? originalQty : 0);
 
-    if (isEdit && initialData) {
-      const originalQty =
-        initialData.items?.find((item) => item.product._id === productId)
-          ?.quantity || 0;
-
-      const maxAllowed = currentStock + originalQty;
-
-      if (quantity > maxAllowed) {
-        toast.warn(
-          `Max available quantity: ${maxAllowed} (includes previously ordered ${originalQty})`
-        );
-        updated[index].quantity = maxAllowed;
-      } else {
-        updated[index].quantity = quantity;
-      }
+    if (quantity > maxAllowed) {
+      toast.warn(`Max available quantity: ${maxAllowed}`);
+      updated[index].quantity = maxAllowed;
     } else {
-      if (quantity > currentStock) {
-        toast.warn(`Only ${currentStock} units available`);
-        updated[index].quantity = currentStock;
-      } else {
-        updated[index].quantity = quantity;
-      }
+      updated[index].quantity = quantity;
     }
 
     setOrderItems(updated);
@@ -146,16 +107,12 @@ const CreateOrderModal = ({
     setOrderItems((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const getSubtotal = () =>
-    orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-  const getTotal = () => Math.max(getSubtotal() - discount, 0);
+  const getSubtotal = () => orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const netPayable = Math.max(getSubtotal() - discount, 0);
 
   const handleSubmit = async () => {
     if (!selectedCustomer || orderItems.length === 0) {
-      return toast.error(
-        "Please select a customer and add at least one product."
-      );
+      return toast.error("Please select a customer and add at least one product.");
     }
 
     for (let item of orderItems) {
@@ -163,36 +120,27 @@ const CreateOrderModal = ({
       if (!product) continue;
 
       let availableStock = product.stock;
-
       if (isEdit && initialData) {
-        const originalQty =
-          initialData.items?.find((prev) => prev.product._id === item.product)
-            ?.quantity || 0;
-
+        const originalQty = initialData.items?.find((prev) => prev.product._id === item.product)?.quantity || 0;
         availableStock += originalQty;
       }
 
       if (item.quantity > availableStock) {
-        return toast.error(
-          `Insufficient stock for ${product.name}. Only ${availableStock} units available.`
-        );
+        return toast.error(`Insufficient stock for ${product.name}. Only ${availableStock} units available.`);
       }
     }
 
     const payload = {
       customerId: selectedCustomer,
       discount,
-      items: orderItems.map((item) => ({
-        product: item.product,
-        quantity: item.quantity,
-      })),
+      amountPaid: Math.min(amountPaid, netPayable),
+      items: orderItems.map((item) => ({ product: item.product, quantity: item.quantity })),
       specialInstructions: note,
     };
 
-    const action =
-      isEdit && initialData?.order?._id
-        ? updateOrder({ id: initialData?.order?._id, data: payload })
-        : createOrder(payload);
+    const action = isEdit && initialData?.order?._id
+      ? updateOrder({ id: initialData?.order?._id, data: payload })
+      : createOrder(payload);
 
     const res = await dispatch(action);
     if (res.meta.requestStatus === "fulfilled") {
@@ -202,6 +150,7 @@ const CreateOrderModal = ({
       setDiscount(0);
       setOrderItems([]);
       setSelectedProductId("");
+      setAmountPaid(0);
       dispatch(fetchOrders());
       onClose();
     }
@@ -269,11 +218,13 @@ const CreateOrderModal = ({
               Add
             </button>
           </div>
+
           {!selectedCustomer && (
             <p className="text-sm text-orange-500 mb-2 -mt-2 ps-1">
               Please select a customer before adding products.
             </p>
           )}
+
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm text-left text-gray-700">
               <thead className="bg-gray-100">
@@ -295,9 +246,7 @@ const CreateOrderModal = ({
                         type="number"
                         min="1"
                         value={p.quantity}
-                        onChange={(e) =>
-                          handleQuantityChange(index, e.target.value)
-                        }
+                        onChange={(e) => handleQuantityChange(index, e.target.value)}
                         className="w-20 text-center border border-gray-300 rounded-md"
                       />
                     </td>
@@ -317,12 +266,10 @@ const CreateOrderModal = ({
           </div>
         </div>
 
-        {/* Discount & Notes */}
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Discount, Payment, Notes */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">
-              Discount (₹)
-            </label>
+            <label className="text-sm font-medium text-gray-700 block mb-1">Discount (₹)</label>
             <input
               type="number"
               min="0"
@@ -332,22 +279,43 @@ const CreateOrderModal = ({
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">
-              Notes (optional)
+            <label className="text-sm font-medium text-gray-700 block mb-1 flex items-center justify-between">
+              Amount Paid (₹)
+              <FaCheck
+                title="Pay full amount"
+                className="cursor-pointer text-green-600 hover:text-green-800"
+                onClick={() => setAmountPaid(netPayable)}
+              />
             </label>
-            <textarea
-              rows="2"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
+            <input
+              type="number"
+              min="0"
+              value={amountPaid}
+              onChange={(e) => setAmountPaid(parseFloat(e.target.value) || 0)}
               className="w-full border border-gray-300 rounded-md px-4 py-2"
             />
           </div>
+          <div className="flex flex-col justify-end">
+            <div className="text-md font-semibold text-gray-800">
+              Net Payable: ₹{netPayable.toLocaleString()}
+            </div>
+          </div>
         </div>
 
-        {/* Total & Action */}
+        <div className="mb-6">
+          <label className="text-sm font-medium text-gray-700 block mb-1">Notes (optional)</label>
+          <textarea
+            rows="2"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-4 py-2"
+          />
+        </div>
+
+        {/* Total & Actions */}
         <div className="flex justify-between items-center mt-6">
           <div className="text-lg font-bold text-gray-700">
-            Total: ₹{getTotal().toLocaleString()}
+            Total (after discount): ₹{netPayable.toLocaleString()}
           </div>
           <div className="space-x-3">
             <button

@@ -1,19 +1,21 @@
 // components/orders/Pagination.jsx
 import React from 'react';
 
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+const Pagination = ({ currentPage, totalPages, onPageChange, limit, totalItems }) => {
   const pageNumbers = [];
-
   for (let i = 1; i <= totalPages; i++) {
     pageNumbers.push(i);
   }
 
+  const start = (currentPage - 1) * limit + 1;
+  const end = Math.min(currentPage * limit, totalItems);
+
   return (
     <div className="flex items-center justify-between mt-6">
       <p className="text-sm text-gray-700">
-        Showing <span className="font-medium">{(currentPage - 1) * 4 + 1}</span> to{' '}
-        <span className="font-medium">{Math.min(currentPage * 4, totalPages * 4)}</span> of{' '}
-        <span className="font-medium">{totalPages * 4}</span> orders
+        Showing <span className="font-medium">{start}</span> to{' '}
+        <span className="font-medium">{end}</span> of{' '}
+        <span className="font-medium">{totalItems}</span> orders
       </p>
 
       <div className="flex items-center space-x-2">

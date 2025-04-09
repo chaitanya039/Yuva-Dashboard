@@ -32,7 +32,7 @@ const Analytics = () => {
 
   return (
     <div
-      className="min-h-screen bg-gray-100 p-4 md:p-6 lg:p-8 space-y-8 w-full"
+      className="min-h-screen bg-gray-100 space-y-8 w-full"
       id="analytics"
     >
       {/* 🧭 Breadcrumb + Header */}
@@ -54,15 +54,15 @@ const Analytics = () => {
       <KPIStats />
 
       {/* 🗂️ Tabs */}
-      <div className="flex gap-4 mb-4 border-b">
+      <div className="flex gap-4 mb-4 border-b border-gray-800">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={`text-sm cursor-pointer px-4 py-2 rounded-t-md font-medium ${
               activeTab === tab.key
-                ? "bg-white border border-b-0 shadow text-blue-600"
-                : "bg-gray-100 text-gray-600"
+                ? "bg-gray-800 border border-b-0 shadow text-white"
+                : "bg-gray-100 text-gray-800"
             }`}
           >
             {tab.label}
