@@ -1,9 +1,16 @@
 import axios from 'axios';
 
-// Base setup
+// Detect environment
+const isProduction = import.meta.env.MODE === 'production';
+
+// Set base URL conditionally
+const baseURL = isProduction
+  ? import.meta.env.VITE_API_BASE_URL
+  : 'http://localhost:5000/api/v1';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1',
-  withCredentials: true, // ✅ important for cookie-based auth
+  baseURL,
+  withCredentials: true,
 });
 
 // Intercept each request
