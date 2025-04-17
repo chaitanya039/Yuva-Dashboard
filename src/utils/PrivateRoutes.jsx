@@ -1,4 +1,3 @@
-// PrivateRoutes.jsx
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
@@ -8,7 +7,7 @@ import { loadUser } from "../features/authSlice";
 const PrivateRoutes = ({ allowedRoles }) => {
   const { isAuthenticated, user, loading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  
+
   useEffect(() => {
     if (!user) {
       dispatch(loadUser());

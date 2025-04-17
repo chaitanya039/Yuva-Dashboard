@@ -15,46 +15,83 @@ const createGetThunk = (name, endpoint) =>
     }
   });
 
-// 🚀 USERS THUNKS
+// 🚀 THUNKS
 export const fetchUsers = createGetThunk("users/fetchUsers", "/users");
-export const getUserById = createGetThunk("users/getUserById", "/users");
+export const fetchRoles = createGetThunk("users/fetchRoles", "/users/roles"); // ✅
 
-
-export const createUser = createAsyncThunk("users/createUser", async (formData, thunkAPI) => {
-  try {
-    const res = await api.post("/users", formData);
-    return res.data.data;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to create user");
+export const getUserById = createAsyncThunk(
+  "users/getUserById",
+  async (id, thunkAPI) => {
+    try {
+      const res = await api.get(`/users/${id}`);
+      return res.data.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to fetch user"
+      );
+    }
   }
-});
+);
 
-export const updateUser = createAsyncThunk("users/updateUser", async ({ id, formData }, thunkAPI) => {
-  try {
-    const res = await api.put(`/users/${id}`, formData);
-    return res.data.data;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to update user");
+export const createUser = createAsyncThunk(
+  "users/createUser",
+  async (formData, thunkAPI) => {
+    try {
+      const res = await api.post("/users", formData);
+      return res.data.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to create user"
+      );
+    }
   }
-});
+);
 
-export const deleteUser = createAsyncThunk("users/deleteUser", async (id, thunkAPI) => {
-  try {
-    await api.delete(`/users/${id}`);
-    return id;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to delete user");
+export const updateUser = createAsyncThunk(
+  "users/updateUser",
+  async ({ id, formData }, thunkAPI) => {
+    try {
+      const res = await api.put(`/users/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return res.data.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to update user"
+      );
+    }
   }
-});
+);
 
-export const toggleUserStatus = createAsyncThunk("users/toggleUserStatus", async (id, thunkAPI) => {
-  try {
-    const res = await api.patch(`/users/${id}/status`);
-    return res.data.data;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data?.message || "Failed to toggle user status");
+export const deleteUser = createAsyncThunk(
+  "users/deleteUser",
+  async (id, thunkAPI) => {
+    try {
+      await api.delete(`/users/${id}`);
+      return id;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to delete user"
+      );
+    }
   }
-});
+);
+
+export const toggleUserStatus = createAsyncThunk(
+  "users/toggleUserStatus",
+  async (id, thunkAPI) => {
+    try {
+      const res = await api.patch(`/users/${id}/status`);
+      return res.data.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || "Failed to toggle user status"
+      );
+    }
+  }
+);
 
 // ============================
 // 📦 USERS SLICE
@@ -66,6 +103,7 @@ const userSlice = createSlice({
     loading: false,
     error: null,
     list: [],
+    roles: [], // ✅ for select options
     selectedUser: null,
   },
   reducers: {},
@@ -78,11 +116,7 @@ const userSlice = createSlice({
         })
         .addCase(thunk.fulfilled, (state, action) => {
           state.loading = false;
-          if (key === "list") {
-            state.list = action.payload;
-          } else if (key === "selectedUser") {
-            state.selectedUser = action.payload;
-          }
+          state[key] = action.payload;
         })
         .addCase(thunk.rejected, (state, action) => {
           state.loading = false;
@@ -92,6 +126,7 @@ const userSlice = createSlice({
 
     handleAsync(fetchUsers, "list");
     handleAsync(getUserById, "selectedUser");
+    handleAsync(fetchRoles, "roles"); // ✅
 
     builder
       .addCase(createUser.fulfilled, (state, action) => {

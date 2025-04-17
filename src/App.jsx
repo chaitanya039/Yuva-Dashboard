@@ -1,3 +1,4 @@
+// ✅ Updated App.jsx with all role-based functionality
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -5,7 +6,6 @@ import {
   Routes,
   Route,
   Navigate,
-  useLocation,
 } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
@@ -50,11 +50,12 @@ const App = () => {
           />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Protected Admin Layout */}
-          <Route element={<PrivateRoutes allowedRoles={["Admin"]} />}>
+          {/* Protected Admin Layout for All Roles */}
+          <Route
+            element={<PrivateRoutes allowedRoles={["Admin", "Sales", "InventoryManager"]} />}
+          >
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-            {/* ✅ This Route wraps your custom layout with Sidebar + AnimatedRoutes */}
             <Route
               path="*"
               element={
