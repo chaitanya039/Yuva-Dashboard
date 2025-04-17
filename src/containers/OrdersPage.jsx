@@ -16,10 +16,10 @@ import {
   resetRequestFilters,
 } from "../features/orderRequestSlice";
 
-import OrdersTabs from "../components/Orders/OrdersTabs";
-import OrderFilters from "../components/Orders/OrderFilters";
-import OrderTable from "../components/Orders/OrdersTable";
-import Pagination from "../components/Orders/Pagination";
+import OrdersTabs from "../components/orders/OrdersTabs";
+import OrderFilters from "../components/orders/OrderFilters";
+import OrderTable from "../components/orders/OrdersTable";
+import Pagination from "../components/orders/Pagination";
 import CreateOrderModal from "../components/Modals/CreateOrderModal";
 import ViewOrderModal from "../components/Modals/ViewOrderModal";
 import OrderRequestReviewModal from "../components/modals/OrderRequestReviewModal";
