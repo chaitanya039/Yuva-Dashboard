@@ -22,7 +22,7 @@ import { exportInvoicePdf } from "../features/invoiceSlice";
 import OrdersTabs from "../components/orders/OrdersTabs";
 import OrderFilters from "../components/orders/OrderFilters";
 import Pagination from "../components/orders/Pagination";
-import OrdersTable from "../components/Orders/OrdersTable";
+import OrdersTable from "../components/orders/OrdersTable";
 import CreateOrderModal from "../components/modals/CreateOrderModal";
 import ViewOrderModal from "../components/modals/ViewOrderModal";
 import ConfirmDialog from "../components/ConfirmDialog";
