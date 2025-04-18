@@ -30,9 +30,9 @@ export const fetchOrderRequests = createAsyncThunk(
 // Approve order request
 export const approveOrderRequest = createAsyncThunk(
   'orderRequests/approveOrderRequest',
-  async (id, thunkAPI) => {
+  async ({ id, decisionNote }, thunkAPI) => {
     try {
-      const res = await api.put(`/order-requests/approve/${id}`);
+      const res = await api.put(`/order-requests/approve/${id}`, { decisionNote });
       return { ...res.data.data, id };
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data?.message || 'Failed to approve order');
@@ -40,18 +40,21 @@ export const approveOrderRequest = createAsyncThunk(
   }
 );
 
-// Reject order request
+// Reject order request with decisionNote
 export const rejectOrderRequest = createAsyncThunk(
   'orderRequests/rejectOrderRequest',
-  async (id, thunkAPI) => {
+  async ({ id, decisionNote }, thunkAPI) => {
     try {
-      const res = await api.put(`/order-requests/reject/${id}`);
+      const res = await api.put(`/order-requests/reject/${id}`, { decisionNote });
       return { ...res.data.data, id };
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || 'Failed to reject order');
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || 'Failed to reject order'
+      );
     }
   }
 );
+
 
 const orderRequestSlice = createSlice({
   name: 'orderRequests',

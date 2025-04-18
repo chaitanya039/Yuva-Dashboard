@@ -1,7 +1,7 @@
 import React from "react";
 import OrderRow from "./OrderRow";
 
-const OrderTable = ({ onView, onStatusChange, orders, onDelete, onEdit, onPrint }) => {
+const OrdersTable = ({ onView, onStatusChange, orders, onDelete, onEdit, onPrint }) => {
   return (
     <div className="overflow-x-auto bg-white shadow rounded-lg custom-scrollbar mt-6">
       <table className="min-w-full divide-y divide-gray-200">
@@ -56,4 +56,4 @@ const OrderTable = ({ onView, onStatusChange, orders, onDelete, onEdit, onPrint 
   );
 };
 
-export default OrderTable;
+export default OrdersTable;

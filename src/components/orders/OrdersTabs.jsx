@@ -1,27 +1,20 @@
 // components/orders/OrdersTabs.jsx
-import React, { useState } from 'react';
+import React from "react";
 
-const tabs = ['All Orders', 'Order Requests'];
+const tabs = ["All Orders", "Order Requests"];
 
-const OrdersTabs = ({ onTabChange }) => {
-  const [activeTab, setActiveTab] = useState('All Orders');
-
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
-    onTabChange(tab);
-  };
-
+const OrdersTabs = ({ activeTab, onTabChange }) => {
   return (
     <div className="border-b border-gray-200 mb-6">
       <nav className="flex space-x-4">
         {tabs.map((tab) => (
           <button
             key={tab}
-            onClick={() => handleTabClick(tab)}
-            className={`px-4 py-2 text-sm font-medium ${
+            onClick={() => onTabChange(tab)}
+            className={`px-4 py-2 text-sm font-medium rounded-t-md transition duration-200 ${
               activeTab === tab
-                ? 'text-gray-900 border-b-2 border-blue-500'
-                : 'text-gray-500 hover:text-gray-700'
+                ? "text-blue-600 border-b-2 border-blue-600 bg-white shadow"
+                : "text-gray-500 hover:text-blue-600"
             }`}
           >
             {tab}

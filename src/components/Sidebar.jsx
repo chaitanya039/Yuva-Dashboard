@@ -206,6 +206,17 @@ const Sidebar = () => {
             </button>
           </div>
         </div>
+
+        {/* <div className="px-4 py-1.5 text-center text-[10px] text-gray-400">
+          Developed by{" "}
+          <a
+            href="https://chaitanyapansare.netlify.app/"
+            target="_blank"
+            className="text-blue-600 font-medium"
+          >
+            Chaitanya Pansare
+          </a>
+        </div> */}
       </nav>
     </>
   );

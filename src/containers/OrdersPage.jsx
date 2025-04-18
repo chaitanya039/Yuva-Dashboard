@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import Modal from "react-modal";
 import {
   fetchOrders,
   fetchOrderById,
@@ -9,33 +10,41 @@ import {
   deleteOrder,
   updateOrder,
 } from "../features/orderSlice";
-
 import {
   fetchOrderRequests,
+  approveOrderRequest,
+  rejectOrderRequest,
   setRequestFilters,
   resetRequestFilters,
 } from "../features/orderRequestSlice";
-
+import { toast } from "react-toastify";
+import { exportInvoicePdf } from "../features/invoiceSlice";
 import OrdersTabs from "../components/orders/OrdersTabs";
 import OrderFilters from "../components/orders/OrderFilters";
-import OrderTable from "../components/orders/OrdersTable";
 import Pagination from "../components/orders/Pagination";
+import OrdersTable from "../components/Orders/OrdersTable";
 import CreateOrderModal from "../components/modals/CreateOrderModal";
 import ViewOrderModal from "../components/modals/ViewOrderModal";
-import OrderRequestReviewModal from "../components/modals/OrderRequestReviewModal";
-import { toast } from "react-toastify";
 import ConfirmDialog from "../components/ConfirmDialog";
-import { exportInvoicePdf } from "../features/invoiceSlice";
+
+const getStatusBadgeColor = (status) => {
+  switch (status) {
+    case "Pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "Approved":
+      return "bg-blue-100 text-blue-800";
+    case "Rejected":
+      return "bg-red-100 text-red-700";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+};
 
 const OrdersPage = () => {
   const dispatch = useDispatch();
-
-  // Orders
   const { orders, totalOrders, currentOrder, filters } = useSelector(
     (state) => state.orders
   );
-
-  // Order Requests
   const {
     requests: orderRequests,
     totalRequests,
@@ -43,7 +52,6 @@ const OrdersPage = () => {
     loading: loadingRequests,
   } = useSelector((state) => state.orderRequests);
 
-  // UI State
   const [activeTab, setActiveTab] = useState("All Orders");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -52,9 +60,13 @@ const OrdersPage = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [isDeletingNow, setIsDeletingNow] = useState(false);
+  const [decisionNote, setDecisionNote] = useState("");
+
+  const isOrders = activeTab === "All Orders";
+  const activeFilters = isOrders ? filters : requestFilters;
 
   useEffect(() => {
-    if (activeTab === "All Orders") {
+    if (isOrders) {
       dispatch(fetchOrders(filters));
       dispatch(fetchRecentOrders());
     } else {
@@ -62,163 +74,89 @@ const OrdersPage = () => {
     }
   }, [dispatch, filters, requestFilters, activeTab]);
 
-  const handleEditOrder = async (orderId) => {
-    const res = await dispatch(fetchOrderById(orderId));
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    dispatch(
+      tab === "All Orders" ? resetOrderFilters() : resetRequestFilters()
+    );
+  };
+
+  const handleSearch = (query) => {
+    const payload = { search: query, page: 1 };
+    dispatch(isOrders ? setOrderFilters(payload) : setRequestFilters(payload));
+  };
+
+  const handleFilterChange = (newFilters) => {
+    dispatch(
+      isOrders ? setOrderFilters(newFilters) : setRequestFilters(newFilters)
+    );
+  };
+
+  const handlePageChange = (page) => {
+    dispatch(
+      isOrders ? setOrderFilters({ page }) : setRequestFilters({ page })
+    );
+  };
+
+  const handleEditOrder = async (id) => {
+    const res = await dispatch(fetchOrderById(id));
     if (res.meta.requestStatus === "fulfilled") {
       setIsEditMode(true);
       setIsCreateModalOpen(true);
     }
   };
 
-  const handleDeleteConfirm = (orderId) => {
-    setOrderToDelete(orderId);
-    setShowConfirm(true);
-  };
-
   const confirmDelete = async () => {
     if (!orderToDelete) return;
-
     setIsDeletingNow(true);
     const res = await dispatch(deleteOrder(orderToDelete));
     setIsDeletingNow(false);
     setShowConfirm(false);
     setOrderToDelete(null);
-
-    if (res.meta.requestStatus === "fulfilled") {
-      toast.success("Order deleted successfully");
-      dispatch(fetchOrders(filters));
-    } else {
-      toast.error(res.payload || "Failed to delete order");
-    }
+    res.meta.requestStatus === "fulfilled"
+      ? toast.success("Order deleted")
+      : toast.error("Failed to delete order");
   };
-
-  const handleSearch = (query) => {
-    if (activeTab === "All Orders") {
-      dispatch(setOrderFilters({ search: query, page: 1 }));
-    } else {
-      dispatch(setRequestFilters({ search: query, page: 1 }));
-    }
-  };
-
-  const handleFilterChange = (newFilters) => {
-    if (activeTab === "All Orders") {
-      dispatch(setOrderFilters({ ...newFilters }));
-    } else {
-      dispatch(setRequestFilters({ ...newFilters }));
-    }
-  };
-
-  const handleResetFilters = () => {
-    if (activeTab === "All Orders") {
-      dispatch(resetOrderFilters());
-    } else {
-      dispatch(resetRequestFilters());
-    }
-  };
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    if (tab === "All Orders") {
-      dispatch(resetOrderFilters());
-    } else {
-      dispatch(resetRequestFilters());
-    }
-  };
-
-  const handlePageChange = (page) => {
-    if (page >= 1) {
-      if (activeTab === "All Orders") {
-        dispatch(setOrderFilters({ page }));
-      } else {
-        dispatch(setRequestFilters({ page }));
-      }
-    }
-  };
-
-  const handleCreateOrder = () => {
-    setIsCreateModalOpen(true);
-  };
-
-  const handleViewOrder = async (orderId) => {
-    const res = await dispatch(fetchOrderById(orderId));
-    if (res.meta.requestStatus === "fulfilled") {
-      setIsViewModalOpen(true);
-    }
-  };
-
-  const handleCloseModals = () => {
-    setIsCreateModalOpen(false);
-    setIsViewModalOpen(false);
-    setSelectedRequest(null);
-    setIsEditMode(false);
-  };
-
-  const handleStatusChange = async (orderId, newStatus) => {
-    try {
-      await dispatch(updateOrder({ id: orderId, data: { status: newStatus } }));
-      await dispatch(fetchOrders());
-    } catch (err) {
-      console.error("Status update failed:", err);
-    }
-  };
-
-  const getStatusBadgeColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "Approved":
-        return "bg-blue-100 text-blue-800";
-      case "Rejected":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const totalPages =
-    activeTab === "All Orders"
-      ? Math.ceil(totalOrders / filters.limit)
-      : Math.ceil(totalRequests / requestFilters.limit);
-
-  const activeFilters = activeTab === "All Orders" ? filters : requestFilters;
 
   const handlePrintOrder = async (order) => {
     const res = await dispatch(exportInvoicePdf(order._id));
-    if (res.meta.requestStatus === "fulfilled") {
-      toast.success("Invoice downloaded successfully");
-    } else {
-      toast.error(res.payload || "Failed to generate invoice");
-    }
+    res.meta.requestStatus === "fulfilled"
+      ? toast.success("Invoice downloaded")
+      : toast.error("Failed to generate invoice");
   };
 
+  const handleApprove = async (id) => {
+    const res = await dispatch(approveOrderRequest({ id, decisionNote }));
+    if (res.meta.requestStatus === "fulfilled") {
+      toast.success("Order request approved successfully");
+      setSelectedRequest(null);
+      dispatch(fetchOrderRequests(requestFilters));
+    } else {
+      toast.error(res.payload || "Failed to approve order request");
+    }
+  };
+  
+  const handleReject = async (id) => {
+    const res = await dispatch(rejectOrderRequest({ id, decisionNote }));
+    if (res.meta.requestStatus === "fulfilled") {
+      toast.success("Order request rejected successfully");
+      setSelectedRequest(null);
+      setDecisionNote("");
+      dispatch(fetchOrderRequests(requestFilters));
+    } else {
+      toast.error(res.payload || "Failed to reject order request");
+    }
+  };
+  
+
+  const totalPages = Math.ceil(
+    (isOrders ? totalOrders : totalRequests) / activeFilters.limit
+  );
+
   return (
-    <div className="min-h-screen bg-gray-100" id="orders">
-      <div className="mb-3">
+    <div className="min-h-screen bg-gray-100 px-4 py-6">
+      <div className="mb-4">
         <h1 className="text-2xl font-bold text-gray-800">Orders</h1>
-        <nav className="text-sm text-gray-600 mt-1" aria-label="Breadcrumb">
-          <ol className="flex items-center space-x-1">
-            <li>
-              <a href="#dashboard" className="hover:text-blue-600">
-                Dashboard
-              </a>
-            </li>
-            <li className="flex items-center space-x-1">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="font-medium">Orders</span>
-            </li>
-          </ol>
-        </nav>
       </div>
 
       <OrdersTabs activeTab={activeTab} onTabChange={handleTabChange} />
@@ -227,84 +165,109 @@ const OrdersPage = () => {
         filters={activeFilters}
         onSearch={handleSearch}
         onFilterChange={handleFilterChange}
-        onReset={handleResetFilters}
-        onCreate={handleCreateOrder}
+        onReset={() =>
+          handleFilterChange({ search: "", sort: "newest", page: 1 })
+        }
+        onCreate={() => setIsCreateModalOpen(true)}
+        showStatusFilter={isOrders}
+        showDateFilter={isOrders}
+        showSortFilter={true}
       />
 
-      {activeTab === "All Orders" && (
-        <OrderTable
-          onView={(order) => handleViewOrder(order._id)}
-          onStatusChange={handleStatusChange}
+      {isOrders ? (
+        <OrdersTable
           orders={orders}
+          onView={(order) => {
+            dispatch(fetchOrderById(order._id));
+            setIsViewModalOpen(true);
+          }}
+          onStatusChange={(id, status) =>
+            dispatch(updateOrder({ id, data: { status } }))
+          }
           onEdit={(order) => handleEditOrder(order._id)}
-          onDelete={(orderId) => handleDeleteConfirm(orderId)}
-          onPrint={handlePrintOrder} // ✅ Add this line
+          onDelete={(id) => {
+            setOrderToDelete(id);
+            setShowConfirm(true);
+          }}
+          onPrint={handlePrintOrder}
         />
-      )}
-
-      {activeTab === "Order Requests" && (
-        <div className="overflow-x-auto custom-scrollbar mt-6">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+      ) : (
+        <div className="overflow-x-auto custom-scrollbar mt-6 bg-white rounded shadow">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-50 text-left uppercase text-xs text-gray-500 ">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Request ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Action
-                </th>
+                <th className="px-6 py-3 font-semibold">Request ID</th>
+                <th className="px-6 py-3 font-semibold">Customer</th>
+                <th className="px-6 py-3 font-semibold">Date</th>
+                <th className="px-6 py-3 font-semibold">Items</th>
+                <th className="px-6 py-3 font-semibold">Status</th>
+                <th className="px-6 py-3 font-semibold text-right">Action</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loadingRequests ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                  <td colSpan={6} className="text-center py-6 text-gray-500">
                     Loading...
                   </td>
                 </tr>
               ) : orderRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-6 text-gray-500">
+                  <td colSpan={6} className="text-center py-6 text-gray-500">
                     No requests found
                   </td>
                 </tr>
               ) : (
-                orderRequests.map((request) => (
-                  <tr key={request._id}>
-                    <td className="px-6 py-4 text-sm text-gray-800">
-                      {request._id}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {request.customer?.name || "N/A"}
-                      <div className="text-xs text-gray-500">
-                        {request.customer?.email || ""}
+                orderRequests.map((req) => (
+                  <tr key={req._id}>
+                    <td className="px-6 py-4">{req._id}</td>
+                    <td className="px-6 py-4 flex items-center gap-3">
+                      <img
+                        src={
+                          req.customer?.profileImg ||
+                          "https://placehold.co/32x32"
+                        }
+                        alt="Profile"
+                        className="w-10 h-10 rounded-full"
+                      />
+                      <div>
+                        <div>{req.customer?.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {req.customer?.email}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {new Date(request.createdAt).toLocaleDateString()}
+                    <td className="px-6 py-4">
+                      {new Date(req.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 text-sm font-semibold">
+                    <td className="px-6 py-4">
+                      {(req.items || []).slice(0, 3).map((item, index) => (
+                        <div
+                          key={index}
+                          className="text-xs text-gray-700 truncate"
+                        >
+                          {item?.product?.name}
+                        </div>
+                      ))}
+                      {req.items?.length > 3 && (
+                        <span className="text-xs text-gray-400 italic">
+                          + more
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
                       <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(
-                          request.status
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeColor(
+                          req.status
                         )}`}
                       >
-                        {request.status}
+                        {req.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-right">
+                    <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => setSelectedRequest(request)}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
+                        onClick={() => setSelectedRequest(req)}
+                        className="text-blue-600 hover:underline"
                       >
                         Review
                       </button>
@@ -322,27 +285,142 @@ const OrdersPage = () => {
         totalPages={totalPages}
         onPageChange={handlePageChange}
         limit={activeFilters.limit}
-        totalItems={activeTab === "All Orders" ? totalOrders : totalRequests}
+        totalItems={isOrders ? totalOrders : totalRequests}
       />
 
       <CreateOrderModal
         isOpen={isCreateModalOpen}
-        onClose={handleCloseModals}
+        onClose={() => setIsCreateModalOpen(false)}
         isEdit={isEditMode}
         initialData={currentOrder}
       />
 
       <ViewOrderModal
         isOpen={isViewModalOpen}
-        onClose={handleCloseModals}
+        onClose={() => setIsViewModalOpen(false)}
         order={currentOrder}
         onEdit={() => handleEditOrder(currentOrder?.order?._id)}
       />
-      <OrderRequestReviewModal
-        isOpen={!!selectedRequest}
-        onClose={() => setSelectedRequest(null)}
-        order={selectedRequest}
-      />
+
+      {selectedRequest && (
+        <Modal
+          isOpen={!!selectedRequest}
+          onRequestClose={() => setSelectedRequest(null)}
+          contentLabel="Review Order Request"
+          className="w-full h-fit max-w-2xl bg-white rounded-xl shadow-lg p-6 mx-auto mt-5 outline-none animate__animated animate__fadeIn"
+          overlayClassName="fixed inset-0 bg-black/40 flex justify-center pt-10 z-50"
+          >
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-800">
+                Review Order Request
+              </h2>
+              <button
+                onClick={() => setSelectedRequest(null)}
+                className="text-gray-500 hover:text-gray-800 text-xl"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Request Info */}
+            <div className="text-sm text-gray-700 space-y-1">
+              <p>
+                <strong>ID:</strong> {selectedRequest._id}
+              </p>
+              <p>
+                <strong>Customer:</strong> {selectedRequest.customer?.name}
+              </p>
+              <p>
+                <strong>Status:</strong>
+                <span
+                  className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadgeColor(
+                    selectedRequest.status
+                  )}`}
+                >
+                  {selectedRequest.status}
+                </span>
+              </p>
+              {selectedRequest.customerNote && (
+                <p>
+                  <strong>Customer Note:</strong>
+                  <span className="ml-1 text-gray-600 italic">
+                    "{selectedRequest.customerNote}"
+                  </span>
+                </p>
+              )}
+            </div>
+
+            {/* Items */}
+            <div className="border-t pt-4">
+              <h4 className="text-md font-semibold mb-2 text-gray-700">
+                Products
+              </h4>
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                {(selectedRequest.items || []).map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-4 p-2  rounded-md"
+                  >
+                    <img
+                      src={item?.product?.image || "https://placehold.co/40"}
+                      alt={item?.product?.name}
+                      className="w-12 h-12 rounded-md object-cover"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {item?.product?.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Quantity: {item?.quantity}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Decision Note */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Decision Note{" "}
+                <span className="text-xs text-gray-400">
+                  (Optional for rejection)
+                </span>
+              </label>
+              <textarea
+                rows={3}
+                value={decisionNote}
+                onChange={(e) => setDecisionNote(e.target.value)}
+                placeholder="e.g. Item not in stock, invalid order..."
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                onClick={() => handleApprove(selectedRequest._id)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => handleReject(selectedRequest._id)}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition"
+              >
+                Reject
+              </button>
+              <button
+                onClick={() => setSelectedRequest(null)}
+                className="text-gray-600 hover:text-black px-4 py-2 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       <ConfirmDialog
         isOpen={showConfirm}
@@ -350,7 +428,7 @@ const OrdersPage = () => {
         onConfirm={confirmDelete}
         loading={isDeletingNow}
         title="Delete this order?"
-        message="Are you sure you want to delete this order? This action cannot be undone."
+        message="This action cannot be undone."
         confirmText="Yes, Delete"
         cancelText="Cancel"
       />
