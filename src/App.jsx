@@ -48,9 +48,11 @@ const App = () => {
               isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
             }
           />
+          <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* Protected Admin Layout for All Roles */}
           <Route
+            element={<PrivateRoutes />}
           >
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
