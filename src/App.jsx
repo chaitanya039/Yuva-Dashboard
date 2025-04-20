@@ -52,7 +52,7 @@ const App = () => {
 
           {/* Protected Admin Layout for All Roles */}
           <Route
-            element={<PrivateRoutes />}
+            element={}
           >
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
