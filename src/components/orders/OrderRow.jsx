@@ -81,10 +81,10 @@ const OrderRow = ({ order, onView, onDelete, onEdit, onPrint }) => {
       <td className="px-6 py-2 whitespace-nowrap text-sm text-left leading-tight">
         <div className="space-y-0.5 text-[13px]">
           <div className="text-gray-600 line-through">
-            ₹{order?.totalAmount.toLocaleString()}
+            ₹{order?.totalAmount?.toLocaleString()}
           </div>
           <div className="font-semibold text-gray-900">
-            ₹{order?.netPayable.toLocaleString()}
+            ₹{order?.netPayable?.toLocaleString()}
           </div>
           {order?.discount > 0 && (
             <div className="text-[11px] text-red-500">
@@ -99,14 +99,14 @@ const OrderRow = ({ order, onView, onDelete, onEdit, onPrint }) => {
         <div className="font-medium text-gray-900">
           ₹{amountPaid.toLocaleString()}{" "}
           <span className="text-gray-500">/</span> ₹
-          {netPayable.toLocaleString()}
+          {netPayable?.toLocaleString()}
         </div>
         <div className="relative w-full h-1.5 mt-1 bg-gray-200 rounded-full overflow-hidden">
           <div
             className={`absolute top-0 left-0 h-full rounded-full ${
-              order?.payment.status === "Paid"
+              order?.payment?.status === "Paid"
                 ? "bg-green-600"
-                : order?.payment.status === "Partially Paid"
+                : order?.payment?.status === "Partially Paid"
                 ? "bg-yellow-500"
                 : "bg-red-500"
             }`}
@@ -118,14 +118,14 @@ const OrderRow = ({ order, onView, onDelete, onEdit, onPrint }) => {
         <div className="mt-2 flex items-center justify-between text-xs">
           <span
             className={`inline-block font-medium ${
-              order?.payment.status === "Paid"
+              order?.payment?.status === "Paid"
                 ? "text-green-700 border-green-600"
-                : order?.payment.status === "Partially Paid"
+                : order?.payment?.status === "Partially Paid"
                 ? "text-yellow-700 border-yellow-500"
                 : "text-red-700 border-red-500"
             }`}
           >
-            {order?.payment.status || "Unpaid"}
+            {order?.payment?.status || "Unpaid"}
           </span>
           <span className="text-gray-500 ml-2">
             {Math.round((amountPaid / netPayable) * 100)}%

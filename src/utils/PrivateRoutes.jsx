@@ -10,7 +10,7 @@ const PrivateRoutes = () => {
 
   useEffect(() => {
     if (!user) {
-      dispatch(loadUser());
+      dispatch(loadUser()); // Load user data from backend
     }
   }, [dispatch, user]);
 

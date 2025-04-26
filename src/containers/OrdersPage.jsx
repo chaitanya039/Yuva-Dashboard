@@ -42,9 +42,13 @@ const getStatusBadgeColor = (status) => {
 
 const OrdersPage = () => {
   const dispatch = useDispatch();
-  const { orders, totalOrders, currentOrder, filters, loading: loadingOrders } = useSelector(
-    (state) => state.orders
-  );
+  const {
+    orders,
+    totalOrders,
+    currentOrder,
+    filters,
+    loading: loadingOrders,
+  } = useSelector((state) => state.orders);
   const {
     requests: orderRequests,
     totalRequests,
@@ -135,7 +139,7 @@ const OrdersPage = () => {
       toast.error(res.payload || "Failed to approve order request");
     }
   };
-  
+
   const handleReject = async (id) => {
     const res = await dispatch(rejectOrderRequest({ id, decisionNote }));
     if (res.meta.requestStatus === "fulfilled") {
@@ -147,11 +151,16 @@ const OrdersPage = () => {
       toast.error(res.payload || "Failed to reject order request");
     }
   };
-  
 
   const totalPages = Math.ceil(
     (isOrders ? totalOrders : totalRequests) / activeFilters.limit
   );
+
+  const handleCreateNewOrder = () => {
+    // Reset to create mode and reset all fields in modal
+    setIsEditMode(false); // Set isEditMode to false to ensure Create mode
+    setIsCreateModalOpen(true); // Open Create Order Modal
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-6">
@@ -168,7 +177,7 @@ const OrdersPage = () => {
         onReset={() =>
           handleFilterChange({ search: "", sort: "newest", page: 1 })
         }
-        onCreate={() => setIsCreateModalOpen(true)}
+        onCreate={handleCreateNewOrder} // Using the new onCreate handler
         showStatusFilter={isOrders}
         showDateFilter={isOrders}
         showSortFilter={true}
@@ -228,7 +237,7 @@ const OrdersPage = () => {
                           "https://placehold.co/32x32"
                         }
                         alt="Profile"
-                        className="w-10 h-10 rounded-full"
+                        className="w-10 h-10 object-cover rounded-full"
                       />
                       <div>
                         <div>{req.customer?.name}</div>
@@ -238,7 +247,7 @@ const OrdersPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {new Date(req.createdAt).toLocaleDateString()}
+                      {new Date(req.requestedAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
                       {(req.items || []).slice(0, 3).map((item, index) => (
@@ -309,7 +318,7 @@ const OrdersPage = () => {
           contentLabel="Review Order Request"
           className="w-full h-fit max-w-2xl bg-white rounded-xl shadow-lg p-6 mx-auto mt-5 outline-none animate__animated animate__fadeIn"
           overlayClassName="fixed inset-0 bg-black/40 flex justify-center pt-10 z-50"
-          >
+        >
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold text-gray-800">

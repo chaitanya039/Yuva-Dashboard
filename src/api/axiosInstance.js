@@ -10,30 +10,35 @@ const baseURL = isProduction
 
 const api = axios.create({
   baseURL,
-  withCredentials: true,
+  withCredentials: true,  // Ensure cookies are sent with requests
 });
 
 // Intercept each request
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`; // ✅ Token-based fallback
-    }
+    // If you're using cookies for the token, you don't need to set Authorization manually
+    // Cookies will automatically be sent with requests due to 'withCredentials: true'
+    
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Optional: Global response error handler (e.g., token expired, unauthorized)
+// Global response error handler
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle 401 Unauthorized (Token Expired or Invalid)
     if (error.response?.status === 401) {
       console.warn('Unauthorized. Clearing token...');
-      localStorage.removeItem('token');
-      // Optional: redirect to login
-      // window.location.href = '/login';
+
+      // Clear cookies on Unauthorized (if needed)
+      document.cookie = 'user_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';  // This removes the cookie
+
+      // Optionally, redirect the user to the login page
+      // window.location.href = '/login'; // or use your navigation method if in React
+
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }
