@@ -1,3 +1,4 @@
+// src/features/analyticsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../api/axiosInstance";
 
@@ -9,14 +10,15 @@ const createGetThunk = (name, endpoint) =>
       const res = await api.get(query ? `${endpoint}?${query}` : endpoint);
       return res.data.data;
     } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data?.message || `Failed to fetch ${name}`);
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || `Failed to fetch ${name}`
+      );
     }
   });
 
 // ============================
 // 📊 ANALYTICS THUNKS
 // ============================
-
 export const fetchKPIStats = createGetThunk("analytics/fetchKPIStats", "/analytics/kpi");
 export const fetchRevenueBreakdown = createGetThunk("analytics/fetchRevenueBreakdown", "/analytics/revenue-breakdown");
 export const fetchExpenseBreakdown = createGetThunk("analytics/fetchExpenseBreakdown", "/analytics/expenses/breakdown");
@@ -40,90 +42,142 @@ export const fetchCancelledOrdersStats = createGetThunk("analytics/fetchCancelle
 export const fetchLowStockProducts = createGetThunk("analytics/fetchLowStockProducts", "/analytics/low-stock-products");
 export const fetchCustomerSegments = createGetThunk("analytics/fetchCustomerSegments", "/analytics/customer-segments");
 export const fetchRevenueByCity = createGetThunk("analytics/fetchRevenueByCity", "/analytics/revenue-by-city");
-// 1️⃣ Thunk in analyticsSlice.js
-export const fetchCustomerDistribution = createGetThunk(
-  "analytics/fetchCustomerDistribution",
-  "/analytics/customer-distribution"
-);
+export const fetchCustomerDistribution = createGetThunk("analytics/fetchCustomerDistribution", "/analytics/customer-distribution");
+
+// Mapping keys to thunks
+const analyticsThunks = {
+  kpi: fetchKPIStats,
+  revenueBreakdown: fetchRevenueBreakdown,
+  expenseBreakdown: fetchExpenseBreakdown,
+  salesByCategory: fetchSalesByCategory,
+  revenueVsExpense: fetchRevenueVsExpense,
+  netProfitTrend: fetchNetProfitTrend,
+  topCustomers: fetchTopCustomers,
+  monthlyOrderCount: fetchMonthlyOrderCount,
+  orderTypeDistribution: fetchOrderTypeDistribution,
+  topCustomersByRevenue: fetchTopCustomersByRevenue,
+  mostSoldProducts: fetchMostSoldProducts,
+  monthlyOrderRevenueTrend: fetchMonthlyOrderRevenueTrend,
+  customerTypeDistribution: fetchCustomerTypeDistribution,
+  averageOrderValueTrend: fetchAverageOrderValueTrend,
+  categoryWiseRevenue: fetchCategoryWiseRevenue,
+  customerRegistrationTrend: fetchCustomerRegistrationTrend,
+  recentActivity: fetchRecentActivity,
+  repeatVsNewCustomers: fetchRepeatVsNewCustomers,
+  weekdayOrderHeatmap: fetchWeekdayOrderHeatmap,
+  cancelledOrdersStats: fetchCancelledOrdersStats,
+  lowStockProducts: fetchLowStockProducts,
+  customerSegments: fetchCustomerSegments,
+  revenueByCity: fetchRevenueByCity,
+  customerDistribution: fetchCustomerDistribution,
+};
 
 // ============================
-// 📊 ANALYTICS SLICE
+// 📊 INITIAL STATE
 // ============================
+const initialState = {
+  // Data states
+  kpi: null,
+  revenueBreakdown: [],
+  expenseBreakdown: [],
+  salesByCategory: [],
+  revenueVsExpense: [],
+  netProfitTrend: [],
+  topCustomers: [],
+  monthlyOrderCount: [],
+  orderTypeDistribution: [],
+  topCustomersByRevenue: [],
+  mostSoldProducts: [],
+  monthlyOrderRevenueTrend: [],
+  customerTypeDistribution: [],
+  averageOrderValueTrend: [],
+  categoryWiseRevenue: [],
+  customerRegistrationTrend: [],
+  recentActivity: null,
+  repeatVsNewCustomers: [],
+  weekdayOrderHeatmap: [],
+  cancelledOrdersStats: null,
+  lowStockProducts: [],
+  customerSegments: [],
+  revenueByCity: [],
+  customerDistribution: [],
 
+  // Loading states
+  kpiLoading: false,
+  revenueBreakdownLoading: false,
+  expenseBreakdownLoading: false,
+  salesByCategoryLoading: false,
+  revenueVsExpenseLoading: false,
+  netProfitTrendLoading: false,
+  topCustomersLoading: false,
+  monthlyOrderCountLoading: false,
+  orderTypeDistributionLoading: false,
+  topCustomersByRevenueLoading: false,
+  mostSoldProductsLoading: false,
+  monthlyOrderRevenueTrendLoading: false,
+  customerTypeDistributionLoading: false,
+  averageOrderValueTrendLoading: false,
+  categoryWiseRevenueLoading: false,
+  customerRegistrationTrendLoading: false,
+  recentActivityLoading: false,
+  repeatVsNewCustomersLoading: false,
+  weekdayOrderHeatmapLoading: false,
+  cancelledOrdersStatsLoading: false,
+  lowStockProductsLoading: false,
+  customerSegmentsLoading: false,
+  revenueByCityLoading: false,
+  customerDistributionLoading: false,
+
+  // Error states
+  kpiError: null,
+  revenueBreakdownError: null,
+  expenseBreakdownError: null,
+  salesByCategoryError: null,
+  revenueVsExpenseError: null,
+  netProfitTrendError: null,
+  topCustomersError: null,
+  monthlyOrderCountError: null,
+  orderTypeDistributionError: null,
+  topCustomersByRevenueError: null,
+  mostSoldProductsError: null,
+  monthlyOrderRevenueTrendError: null,
+  customerTypeDistributionError: null,
+  averageOrderValueTrendError: null,
+  categoryWiseRevenueError: null,
+  customerRegistrationTrendError: null,
+  recentActivityError: null,
+  repeatVsNewCustomersError: null,
+  weekdayOrderHeatmapError: null,
+  cancelledOrdersStatsError: null,
+  lowStockProductsError: null,
+  customerSegmentsError: null,
+  revenueByCityError: null,
+  customerDistributionError: null,
+};
+
+// ============================
+// 📊 SLICE
+// ============================
 const analyticsSlice = createSlice({
   name: "analytics",
-  initialState: {
-    loading: false,
-    error: null,
-    // KPI groups
-    kpi: null,
-    revenueBreakdown: [],
-    expenseBreakdown: [],
-    salesByCategory: [],
-    revenueVsExpense: [],
-    netProfitTrend: [],
-    customerDistribution: [],
-    topCustomers: [],
-    monthlyOrderCount: [],
-    orderTypeDistribution: [],
-    topCustomersByRevenue: [],
-    mostSoldProducts: [],
-    monthlyOrderRevenueTrend: [],
-    customerTypeDistribution: [],
-    averageOrderValueTrend: [],
-    categoryWiseRevenue: [],
-    customerRegistrationTrend: [],
-    recentActivity: null,
-    repeatVsNewCustomers: [],
-    weekdayOrderHeatmap: [],
-    cancelledOrdersStats: null,
-    lowStockProducts: [],
-    customerSegments: [],
-    revenueByCity: [],
-  },
+  initialState,
   reducers: {},
   extraReducers: (builder) => {
-    const addCases = (thunk, key) => {
+    Object.entries(analyticsThunks).forEach(([key, thunk]) => {
       builder
         .addCase(thunk.pending, (state) => {
-          state.loading = true;
-          state.error = null;
+          state[`${key}Loading`] = true;
+          state[`${key}Error`] = null;
         })
         .addCase(thunk.fulfilled, (state, action) => {
-          state.loading = false;
+          state[`${key}Loading`] = false;
           state[key] = action.payload;
         })
         .addCase(thunk.rejected, (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
+          state[`${key}Loading`] = false;
+          state[`${key}Error`] = action.payload;
         });
-    };
-
-    // Register all thunks
-    addCases(fetchKPIStats, "kpi");
-    addCases(fetchRevenueBreakdown, "revenueBreakdown");
-    addCases(fetchExpenseBreakdown, "expenseBreakdown");
-    addCases(fetchSalesByCategory, "salesByCategory");
-    addCases(fetchRevenueVsExpense, "revenueVsExpense");
-    addCases(fetchNetProfitTrend, "netProfitTrend");
-    addCases(fetchTopCustomers, "topCustomers");
-    addCases(fetchMonthlyOrderCount, "monthlyOrderCount");
-    addCases(fetchOrderTypeDistribution, "orderTypeDistribution");
-    addCases(fetchTopCustomersByRevenue, "topCustomersByRevenue");
-    addCases(fetchMostSoldProducts, "mostSoldProducts");
-    addCases(fetchMonthlyOrderRevenueTrend, "monthlyOrderRevenueTrend");
-    addCases(fetchCustomerTypeDistribution, "customerTypeDistribution");
-    addCases(fetchAverageOrderValueTrend, "averageOrderValueTrend");
-    addCases(fetchCategoryWiseRevenue, "categoryWiseRevenue");
-    addCases(fetchCustomerRegistrationTrend, "customerRegistrationTrend");
-    addCases(fetchRecentActivity, "recentActivity");
-    addCases(fetchRepeatVsNewCustomers, "repeatVsNewCustomers");
-    addCases(fetchWeekdayOrderHeatmap, "weekdayOrderHeatmap");
-    addCases(fetchCancelledOrdersStats, "cancelledOrdersStats");
-    addCases(fetchLowStockProducts, "lowStockProducts");
-    addCases(fetchCustomerSegments, "customerSegments");
-    addCases(fetchRevenueByCity, "revenueByCity");
-    addCases(fetchCustomerDistribution, "customerDistribution");
+    });
   },
 });
 

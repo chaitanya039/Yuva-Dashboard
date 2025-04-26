@@ -52,7 +52,7 @@ const listenerMiddleware = createListenerMiddleware();
 listenerMiddleware.startListening({
   matcher: (action) =>
     [
-      // Category Triggers
+      // Category TRIGGERS
       createCategory.fulfilled.type,
       updateCategory.fulfilled.type,
       deleteCategory.fulfilled.type,

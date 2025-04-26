@@ -1,4 +1,4 @@
-// ✅ Updated App.jsx with all role-based functionality
+// src/App.jsx
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -6,56 +6,62 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
-import { ClipLoader } from "react-spinners";
 import "react-toastify/dist/ReactToastify.css";
 
-import Sidebar from "./components/Sidebar";
-import LoginPage from "./containers/LoginPage";
-import Unauthorized from "./containers/Unauthorized";
-import PrivateRoutes from "./utils/PrivateRoutes";
-import AnimatedRoutes from "./components/AnimatedRoutes";
-import ScrollToTop from "./components/ScrollToTop";
+import Sidebar         from "./components/Sidebar";
+import LoginPage       from "./containers/LoginPage";
+import Unauthorized    from "./containers/Unauthorized";
+import PrivateRoutes   from "./utils/PrivateRoutes";
+import PublicRoute     from "./utils/PublicRoute";
+import AnimatedRoutes  from "./components/AnimatedRoutes";
+import ScrollToTop     from "./components/ScrollToTop";
+import FullScreenLoader from "./components/FullScreenLoader";
+
+// Helper to show loader only on login/logout
+const AuthLoader = () => {
+  const { loading: authLoading } = useSelector((state) => state.auth);
+  const { pathname } = useLocation();
+
+  // only show full-screen loader when on /login
+  if (!pathname.startsWith("/login")) return null;
+  return <FullScreenLoader loading={authLoading} />;
+};
 
 const App = () => {
-  const { isAuthenticated, loading, error } = useSelector(
-    (state) => state.auth
-  );
+  const { error } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (error) toast.error(error);
   }, [error]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
-        <ClipLoader size={50} color="#3B82F6" />
-      </div>
-    );
-  }
-
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+
       <Router>
         <ScrollToTop />
+
+        {/* full-screen overlay during login/logout */}
+        <AuthLoader />
+
         <Routes>
-          {/* Public Routes */}
+          {/* PUBLIC */}
           <Route
             path="/login"
             element={
-              isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
+              <PublicRoute>
+                <LoginPage />
+              </PublicRoute>
             }
           />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Protected Admin Layout for All Roles */}
-          <Route
-            element={<PrivateRoutes />}
-          >
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-
+          {/* PROTECTED */}
+          <Route element={<PrivateRoutes />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
             <Route
               path="*"
               element={

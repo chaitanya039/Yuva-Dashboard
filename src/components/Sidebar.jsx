@@ -1,4 +1,4 @@
-// ✅ Updated Sidebar.jsx
+// src/components/Sidebar.jsx
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/authSlice";
@@ -11,8 +11,6 @@ import {
   Warehouse,
   BarChart,
   Receipt,
-  Users,
-  Settings,
   Search,
   Menu,
   X,
@@ -26,6 +24,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 const Sidebar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const { user } = useSelector((state) => state.auth);
@@ -34,84 +33,41 @@ const Sidebar = () => {
     {
       section: "Main",
       items: [
-        {
-          label: "Dashboard",
-          to: "/dashboard",
-          icon: LayoutDashboard,
-          roles: ["Admin", "Sales", "InventoryManager"],
-        },
-        {
-          label: "Categories",
-          to: "/categories",
-          icon: Layers,
-          roles: ["Admin", "InventoryManager"],
-        },
-        {
-          label: "Products",
-          to: "/products",
-          icon: Package,
-          roles: ["Admin", "InventoryManager"],
-        },
-        {
-          label: "Customers",
-          to: "/customers",
-          icon: BsPeople,
-          roles: ["Admin", "Sales"],
-        },
-        {
-          label: "Orders",
-          to: "/orders",
-          icon: ShoppingCart,
-          roles: ["Admin", "Sales"],
-        },
-        {
-          label: "Inventory",
-          to: "/inventory",
-          icon: Warehouse,
-          roles: ["Admin", "InventoryManager"],
-        },
-        {
-          label: "Expenses",
-          to: "/expenses",
-          icon: FaMoneyBillWave,
-          roles: ["Admin", "InventoryManager"],
-        },
+        { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, roles: ["Admin", "Sales", "InventoryManager"] },
+        { label: "Categories", to: "/categories", icon: Layers, roles: ["Admin", "InventoryManager"] },
+        { label: "Products", to: "/products", icon: Package, roles: ["Admin", "InventoryManager"] },
+        { label: "Customers", to: "/customers", icon: BsPeople, roles: ["Admin", "Sales"] },
+        { label: "Orders", to: "/orders", icon: ShoppingCart, roles: ["Admin", "Sales"] },
+        { label: "Inventory", to: "/inventory", icon: Warehouse, roles: ["Admin", "InventoryManager"] },
+        { label: "Expenses", to: "/expenses", icon: FaMoneyBillWave, roles: ["Admin", "InventoryManager"] },
       ],
     },
     {
       section: "Reports",
       items: [
-        {
-          label: "Analytics",
-          to: "/analytics",
-          icon: BarChart,
-          roles: ["Admin"],
-        },
-        {
-          label: "Payment Analysis",
-          to: "/payments",
-          icon: MdPayment,
-          roles: ["Admin", "Sales"],
-        },
+        { label: "Analytics", to: "/analytics", icon: BarChart, roles: ["Admin"] },
+        { label: "Payment Analysis", to: "/payments", icon: MdPayment, roles: ["Admin", "Sales"] },
         { label: "Reports", to: "/reports", icon: Receipt, roles: ["Admin"] },
       ],
     },
     {
       section: "Users",
       items: [
-        {
-          label: "User Management",
-          to: "/users",
-          icon: FaUserFriends,
-          roles: ["Admin"],
-        },
+        { label: "User Management", to: "/users", icon: FaUserFriends, roles: ["Admin"] },
       ],
     },
   ];
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      // wait for the logout thunk to complete and clear auth state
+      await dispatch(logout()).unwrap();
+      // replace so the back button won't return to protected routes
+      navigate("/login", { replace: true });
+    } catch (err) {
+      console.error("Logout failed:", err);
+      // you can optionally show a toast here
+    }
   };
 
   const renderLinks = (items) =>
@@ -141,84 +97,71 @@ const Sidebar = () => {
       ));
 
   const SidebarContent = () => (
-    <>
-      <nav className="h-screen bg-white border-r border-gray-200 z-40 flex flex-col">
-        <div className="px-6 pt-8 pb-4">
-          <img
-            src={logo}
-            alt="Tarpaulin Admin Logo"
-            className="h-15 invert brightness-125 contrast-150"
+    <nav className="h-screen bg-white border-r border-gray-200 z-40 flex flex-col">
+      <div className="px-6 pt-8 pb-4">
+        <img
+          src={logo}
+          alt="Tarpaulin Admin Logo"
+          className="h-15 invert brightness-125 contrast-150"
+        />
+      </div>
+
+      <div className="px-4 py-2">
+        <div className="relative">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search..."
+            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
           />
+          <Search className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
         </div>
+      </div>
 
-        <div className="px-4 py-2">
-          <div className="relative">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-            <Search className="h-5 w-5 absolute left-3 top-2.5 text-gray-400" />
-          </div>
-        </div>
-
-        <div className="flex-1 my-2 overflow-y-auto custom-scrollbar">
-          {navItems.map(({ section, items }) => {
-            const visibleItems = items.filter(
-              ({ label, roles }) =>
-                roles.includes(user?.role) &&
-                label.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            return visibleItems.length > 0 ? (
-              <div key={section} className="px-4 mb-6">
-                <h3 className="text-xs uppercase font-semibold text-gray-500 mb-2 px-2">
-                  {section}
-                </h3>
-                <ul>{renderLinks(visibleItems)}</ul>
-              </div>
-            ) : null;
-          })}
-        </div>
-
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex items-center">
-            <img
-              src={user?.profileImg || "https://placehold.co/40x40"}
-              alt="User avatar"
-              className="h-10 w-10 rounded-full mr-3 object-cover"
-            />
-            <div>
-              <h3 className="text-sm font-medium text-gray-700">
-                {user?.name || "Admin User"}
+      <div className="flex-1 my-2 overflow-y-auto custom-scrollbar">
+        {navItems.map(({ section, items }) => {
+          const visibleItems = items.filter(
+            ({ label, roles }) =>
+              roles.includes(user?.role) &&
+              label.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+          return visibleItems.length > 0 ? (
+            <div key={section} className="px-4 mb-6">
+              <h3 className="text-xs uppercase font-semibold text-gray-500 mb-2 px-2">
+                {section}
               </h3>
-              <p className="text-xs text-gray-500">
-                {user?.email || "admin@tarpaulin.com"}
-              </p>
+              <ul>{renderLinks(visibleItems)}</ul>
             </div>
-            <button
-              className="ml-auto cursor-pointer p-1 rounded-full text-gray-400 hover:text-gray-600 focus:outline-none"
-              title="Logout"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
+          ) : null;
+        })}
+      </div>
 
-        {/* <div className="px-4 py-1.5 text-center text-[10px] text-gray-400">
-          Developed by{" "}
-          <a
-            href="https://chaitanyapansare.netlify.app/"
-            target="_blank"
-            className="text-blue-600 font-medium"
+      <div className="p-4 border-t border-gray-200">
+        <div className="flex items-center">
+          <img
+            src={user?.profileImg || "https://placehold.co/40x40"}
+            alt="User avatar"
+            className="h-10 w-10 rounded-full mr-3 object-cover"
+          />
+          <div>
+            <h3 className="text-sm font-medium text-gray-700">
+              {user?.name || "Admin User"}
+            </h3>
+            <p className="text-xs text-gray-500">
+              {user?.email || "admin@tarpaulin.com"}
+            </p>
+          </div>
+          <button
+            className="ml-auto cursor-pointer p-1 rounded-full text-gray-400 hover:text-gray-600 focus:outline-none"
+            title="Logout"
+            onClick={handleLogout}
           >
-            Chaitanya Pansare
-          </a>
-        </div> */}
-      </nav>
-    </>
+            <LogOut className="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+    </nav>
   );
 
   return (
