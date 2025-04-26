@@ -8,7 +8,6 @@ const OrdersTable = ({
   onDelete,
   onEdit,
   onPrint,
-  loadingOrders,
 }) => {
   return (
     <div className="overflow-x-auto bg-white shadow rounded-lg custom-scrollbar mt-6">
@@ -39,16 +38,10 @@ const OrdersTable = ({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {loadingOrders ? (
+          {orders.length === 0 ? (
             <tr>
               <td colSpan="7" className="text-center py-4 text-gray-500">
-                Loading orders...
-              </td>
-            </tr>
-          ) : orders.length === 0 ? (
-            <tr>
-              <td colSpan="7" className="text-center py-4 text-gray-500">
-                No orders found.
+                No orders found!
               </td>
             </tr>
           ) : (

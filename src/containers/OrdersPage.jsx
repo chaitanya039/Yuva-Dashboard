@@ -190,7 +190,6 @@ const OrdersPage = () => {
             setShowConfirm(true);
           }}
           onPrint={handlePrintOrder}
-          loading={loadingOrders}
         />
       ) : (
         <div className="overflow-x-auto custom-scrollbar mt-6 bg-white rounded shadow">
