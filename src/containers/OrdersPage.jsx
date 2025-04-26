@@ -42,7 +42,7 @@ const getStatusBadgeColor = (status) => {
 
 const OrdersPage = () => {
   const dispatch = useDispatch();
-  const { orders, totalOrders, currentOrder, filters } = useSelector(
+  const { orders, totalOrders, currentOrder, filters, loading: loadingOrders } = useSelector(
     (state) => state.orders
   );
   const {
@@ -190,6 +190,7 @@ const OrdersPage = () => {
             setShowConfirm(true);
           }}
           onPrint={handlePrintOrder}
+          loading={loadingOrders}
         />
       ) : (
         <div className="overflow-x-auto custom-scrollbar mt-6 bg-white rounded shadow">

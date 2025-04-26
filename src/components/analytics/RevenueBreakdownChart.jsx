@@ -10,6 +10,7 @@ import {
 import { Bar } from "react-chartjs-2";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchRevenueBreakdown } from "../../features/analyticsSlice";
+import { ClipLoader } from "react-spinners"; // You can use any loader or spinner here
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -19,6 +20,7 @@ const getCurrentMonth = () => new Date().getMonth() + 1;
 const RevenueBreakdownChart = () => {
   const dispatch = useDispatch();
   const revenueBreakdown = useSelector((state) => state.analytics.revenueBreakdown);
+  const revenueBreakdownLoading = useSelector((state) => state.analytics.revenueBreakdownLoading); // Check loading status
 
   const [type, setType] = useState("monthly");
   const [year, setYear] = useState(getCurrentYear());
@@ -40,7 +42,7 @@ const RevenueBreakdownChart = () => {
         ? { type, year }
         : { type };
     dispatch(fetchRevenueBreakdown(params));
-  }, [type, year, month]);
+  }, [type, year, month, dispatch]);
 
   const labels = revenueBreakdown.map((item) => item.label);
   const chartData = {
@@ -102,9 +104,7 @@ const RevenueBreakdownChart = () => {
             <button
               key={t}
               onClick={() => setType(t)}
-              className={`px-3 py-1 text-xs rounded-full ${
-                type === t ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
-              }`}
+              className={`px-3 py-1 text-xs rounded-full ${type === t ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
             >
               {t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
@@ -142,9 +142,16 @@ const RevenueBreakdownChart = () => {
         )}
       </div>
 
-      <div className="h-full w-[91%]">
-        <Bar data={chartData} options={chartOptions} />
-      </div>
+      {/* Aesthetic Loader */}
+      {revenueBreakdownLoading ? (
+        <div className="flex justify-center items-center h-48">
+          <ClipLoader height="50" width="50" color="#4B5563" ariaLabel="loading" />
+        </div>
+      ) : (
+        <div className="h-full w-[91%]">
+          <Bar data={chartData} options={chartOptions} />
+        </div>
+      )}
     </div>
   );
 };

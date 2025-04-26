@@ -1,7 +1,15 @@
 import React from "react";
 import OrderRow from "./OrderRow";
 
-const OrdersTable = ({ onView, onStatusChange, orders, onDelete, onEdit, onPrint }) => {
+const OrdersTable = ({
+  onView,
+  onStatusChange,
+  orders,
+  onDelete,
+  onEdit,
+  onPrint,
+  loadingOrders,
+}) => {
   return (
     <div className="overflow-x-auto bg-white shadow rounded-lg custom-scrollbar mt-6">
       <table className="min-w-full divide-y divide-gray-200">
@@ -31,10 +39,16 @@ const OrdersTable = ({ onView, onStatusChange, orders, onDelete, onEdit, onPrint
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {orders?.length === 0 ? (
+          {loadingOrders ? (
             <tr>
-              <td colSpan={7} className="text-center py-4 text-gray-500">
-                No orders found
+              <td colSpan="7" className="text-center py-4 text-gray-500">
+                Loading orders...
+              </td>
+            </tr>
+          ) : orders.length === 0 ? (
+            <tr>
+              <td colSpan="7" className="text-center py-4 text-gray-500">
+                No orders found.
               </td>
             </tr>
           ) : (

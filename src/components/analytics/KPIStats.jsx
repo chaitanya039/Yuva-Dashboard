@@ -8,6 +8,7 @@ import {
   FaMoneyBillWave,
 } from "react-icons/fa";
 import { GiProfit } from "react-icons/gi";
+import { ClipLoader } from "react-spinners"; // Importing the spinner
 
 const StatBox = ({
   icon: Icon,
@@ -49,8 +50,19 @@ const KPIStats = () => {
     dispatch(fetchKPIStats());
   }, [dispatch]);
 
-  if (loading) return <p>Loading...</p>;
+  // Show loader when data is still loading
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-48">
+        <ClipLoader size={50} color="#4B5563" loading={loading} />
+      </div>
+    );
+  }
+
+  // Show error message if there's any error
   if (error) return <p className="text-red-500">{error}</p>;
+
+  // Return nothing if no data
   if (!kpi) return null;
 
   return (

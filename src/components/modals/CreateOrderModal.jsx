@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import customModalStyles from "../../utils/CustomModalStyles";
-import { FaTrash, FaCheck } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import {
   createOrder,
@@ -266,71 +266,65 @@ const CreateOrderModal = ({ isOpen, onClose, isEdit = false, initialData = null 
           </div>
         </div>
 
-        {/* Discount, Payment, Notes */}
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">Discount (₹)</label>
-            <input
-              type="number"
-              min="0"
-              value={discount}
-              onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-              className="w-full border border-gray-300 rounded-md px-4 py-2"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1 flex items-center justify-between">
-              Amount Paid (₹)
-              <FaCheck
-                title="Pay full amount"
-                className="cursor-pointer text-green-600 hover:text-green-800"
-                onClick={() => setAmountPaid(netPayable)}
+        {/* Payment Summary */}
+        <div className="mb-6 border border-gray-600 rounded-lg p-4">
+          <h3 className="text-lg font-semibold mb-4">3. Payment Details</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Subtotal</label>
+              <div className="p-2 border border-gray-300 rounded-md bg-gray-100">₹{getSubtotal()}</div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Discount</label>
+              <input
+                type="number"
+                min="0"
+                value={discount}
+                onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={amountPaid}
-              onChange={(e) => setAmountPaid(parseFloat(e.target.value) || 0)}
-              className="w-full border border-gray-300 rounded-md px-4 py-2"
-            />
-          </div>
-          <div className="flex flex-col justify-end">
-            <div className="text-md font-semibold text-gray-800">
-              Net Payable: ₹{netPayable.toLocaleString()}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Amount Paid</label>
+              <input
+                type="number"
+                min="0"
+                value={amountPaid}
+                onChange={(e) => setAmountPaid(parseFloat(e.target.value) || 0)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Net Payable</label>
+              <div className="p-2 border border-gray-300 rounded-md bg-gray-100">₹{netPayable}</div>
             </div>
           </div>
         </div>
 
+        {/* Special Instructions */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-gray-700 block mb-1">Notes (optional)</label>
+          <label className="block text-sm font-medium text-gray-700">Special Instructions</label>
           <textarea
-            rows="2"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-4 py-2"
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
         </div>
 
-        {/* Total & Actions */}
-        <div className="flex justify-between items-center mt-6">
-          <div className="text-lg font-bold text-gray-700">
-            Total (after discount): ₹{netPayable.toLocaleString()}
-          </div>
-          <div className="space-x-3">
-            <button
-              onClick={onClose}
-              className="bg-gray-200 text-gray-700 px-5 py-2 rounded-md hover:bg-gray-300"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              className="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700"
-            >
-              {isEdit ? "Update Order" : "Create Order"}
-            </button>
-          </div>
+        <div className="flex justify-end gap-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-6 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+          >
+            {isEdit ? "Update Order" : "Create Order"}
+          </button>
         </div>
       </div>
     </Modal>

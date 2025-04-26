@@ -411,10 +411,7 @@ const Customers = () => {
                               {customer.profileImg ? (
                                 <img
                                   className="h-10 w-10 rounded-full object-cover"
-                                  src={
-                                    customer.profileImg ||
-                                    "https://placehold.co/40x40?text=TP"
-                                  }
+                                  src={customer.profileImg}
                                   alt={customer.name}
                                 />
                               ) : (
@@ -469,29 +466,7 @@ const Customers = () => {
                               title="Delete Customer"
                               disabled={deleting}
                             >
-                              {deleting ? (
-                                <svg
-                                  className="w-4 h-4 animate-spin"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <circle
-                                    className="opacity-25"
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="currentColor"
-                                    strokeWidth="4"
-                                  ></circle>
-                                  <path
-                                    className="opacity-75"
-                                    fill="currentColor"
-                                    d="M4 12a8 8 0 018-8v8H4z"
-                                  ></path>
-                                </svg>
-                              ) : (
-                                <FaTrash className="w-4 h-4" />
-                              )}
+                              <FaTrash className="w-4 h-4" />
                             </button>
                           </div>
                         </td>

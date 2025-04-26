@@ -13,10 +13,14 @@ import { format } from "date-fns";
 import { Pie } from "react-chartjs-2";
 import { Line } from "react-chartjs-2";
 import Chart from "chart.js/auto";
+import TabLoader from "../components/TabLoader";
+import LoadingButton from "../components/LoadingButton";
 
 const Expenses = () => {
   const dispatch = useDispatch();
-  const { expenses, loading } = useSelector((state) => state.expenses);
+  const { expenses, loading, trendLoading, creating, updating, deleting } =
+    useSelector((state) => state.expenses);
+  const isLoading = loading || trendLoading;
 
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [formVisible, setFormVisible] = useState(false);
@@ -134,232 +138,248 @@ const Expenses = () => {
       <div className="mb-6">
         {/* Breadcrumb Style Heading */}
         <div className="mb-1">
-          <a className="text-sm text-gray-500" href="#dashboard">Dashboard</a>
+          <a className="text-sm text-gray-500" href="#dashboard">
+            Dashboard
+          </a>
           <span className="mx-1 text-sm text-gray-400">›</span>
           <span className="text-sm font-medium text-gray-700">Expenses</span>
         </div>
         <h2 className="text-2xl font-bold text-gray-800">Expenses Overview</h2>
       </div>
 
-      {/* Action Buttons and Filter */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-        <div className="flex gap-3 items-center mt-4 sm:mt-0 w-full sm:w-auto">
-          <button
-            className="bg-blue-600 cursor-pointer text-sm text-white px-4 py-2 rounded-md hover:bg-blue-700 transition flex items-center gap-2"
-            onClick={() => {
-              setFormVisible(!formVisible);
-              setFormData({
-                title: "",
-                category: "",
-                amount: "",
-                note: "",
-                expenseDate: "",
-              });
-              setEditMode(false);
-            }}
-          >
-            {formVisible ? "Cancel" : "Add Expense"}
-          </button>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-48">
+          <TabLoader loading={isLoading} />
+        </div>
+      ) : (
+        <div>
+          {/* Action Buttons and Filter */}
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+            <div className="flex gap-3 items-center mt-4 sm:mt-0 w-full sm:w-auto">
+              <button
+                className="bg-blue-600 cursor-pointer text-sm text-white px-4 py-2 rounded-md hover:bg-blue-700 transition flex items-center gap-2"
+                onClick={() => {
+                  setFormVisible(!formVisible);
+                  setFormData({
+                    title: "",
+                    category: "",
+                    amount: "",
+                    note: "",
+                    expenseDate: "",
+                  });
+                  setEditMode(false);
+                }}
+              >
+                {formVisible ? "Cancel" : "Add Expense"}
+              </button>
 
-          {/* Filter Select */}
-          <div className="relative">
-            <select
-              className="appearance-none cursor-pointer border border-gray-300 text-sm text-gray-700 rounded-md px-3 py-2 pl-8 bg-white shadow-sm hover:border-gray-400 transition"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              <option value="all">All Categories</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-            <FaFilter className="absolute top-2.5 left-2.5 text-gray-500 text-xs pointer-events-none" />
+              {/* Filter Select */}
+              <div className="relative">
+                <select
+                  className="appearance-none cursor-pointer border border-gray-300 text-sm text-gray-700 rounded-md px-3 py-2 pl-8 bg-white shadow-sm hover:border-gray-400 transition"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                >
+                  <option value="all">All Categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <FaFilter className="absolute top-2.5 left-2.5 text-gray-500 text-xs pointer-events-none" />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {formVisible && (
-        <form
-          onSubmit={handleFormSubmit}
-          className="grid text-sm grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-6 bg-white shadow-md p-6 rounded-xl"
-        >
-          {/* Title */}
-          <input
-            type="text"
-            placeholder="Expense Title"
-            value={formData.title}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, title: e.target.value }))
-            }
-            className="px-4 py-2 rounded-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-            required
-          />
-
-          {/* Category */}
-          <select
-            value={formData.category}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, category: e.target.value }))
-            }
-            className="px-4 py-2 rounded-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-            required
-          >
-            <option value="">Select Category</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-
-          {/* Amount */}
-          <input
-            type="number"
-            placeholder="Amount"
-            value={formData.amount}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, amount: e.target.value }))
-            }
-            className="px-4 py-2 rounded-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-            required
-          />
-
-          {/* Date */}
-          <input
-            type="date"
-            value={formData.expenseDate}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                expenseDate: e.target.value,
-              }))
-            }
-            className="px-4 py-2 rounded-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-          />
-
-          {/* Note */}
-          <textarea
-            placeholder="Note (optional)"
-            value={formData.note}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, note: e.target.value }))
-            }
-            rows="2"
-            className="col-span-full px-4 py-2 rounded-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-          ></textarea>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="col-span-full cursor-pointer sm:col-span-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
-          >
-            {editMode ? "Update Expense" : "Add Expense"}
-          </button>
-        </form>
-      )}
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg shadow text-center">
-          <p className="text-sm font-medium">Total Expenses</p>
-          <p className="text-xl font-bold">₹{totalAmount.toLocaleString()}</p>
-        </div>
-        {categories.map((cat) => {
-          const catTotal = expenses
-            .filter((e) => e.category === cat)
-            .reduce((sum, e) => sum + e.amount, 0);
-          return (
-            <div
-              key={cat}
-              className="bg-white border border-gray-200 px-4 py-3 rounded-lg shadow text-center"
+          {formVisible && (
+            <form
+              onSubmit={handleFormSubmit}
+              className="grid text-sm grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 mb-6 bg-white shadow-md p-6 rounded-xl"
             >
-              <p className="text-sm text-gray-600">{cat}</p>
-              <p className="text-lg font-semibold text-gray-800">
-                ₹{catTotal.toLocaleString()}
+              {/* Title */}
+              <input
+                type="text"
+                placeholder="Expense Title"
+                value={formData.title}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, title: e.target.value }))
+                }
+                className="px-4 py-2 rounded-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                required
+              />
+
+              {/* Category */}
+              <select
+                value={formData.category}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, category: e.target.value }))
+                }
+                className="px-4 py-2 rounded-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                required
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+
+              {/* Amount */}
+              <input
+                type="number"
+                placeholder="Amount"
+                value={formData.amount}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, amount: e.target.value }))
+                }
+                className="px-4 py-2 rounded-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+                required
+              />
+
+              {/* Date */}
+              <input
+                type="date"
+                value={formData.expenseDate}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    expenseDate: e.target.value,
+                  }))
+                }
+                className="px-4 py-2 rounded-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+              />
+
+              {/* Note */}
+              <textarea
+                placeholder="Note (optional)"
+                value={formData.note}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, note: e.target.value }))
+                }
+                rows="2"
+                className="col-span-full px-4 py-2 rounded-lg ring-1 ring-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+              ></textarea>
+
+              {/* Submit Button */}
+              <LoadingButton
+                loading={editMode ? updating : creating}
+                disabled={editMode ? updating : creating}
+                type="submit"
+                baseClass="col-span-full cursor-pointer sm:col-span-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md transition"
+                spinnerSize={20} // Adjust the size of the spinner as needed
+                text={editMode ? "Update Expense" : "Add Expense"} // Dynamic text
+              />
+            </form>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+            <div className="bg-blue-100 text-blue-800 px-4 py-3 rounded-lg shadow text-center">
+              <p className="text-sm font-medium">Total Expenses</p>
+              <p className="text-xl font-bold">
+                ₹{totalAmount.toLocaleString()}
               </p>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Pie Chart */}
-        <div className="bg-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">
-            Expense Distribution
-          </h4>
-          <div className="w-full flex justify-center items-center h-[260px] max-w-xs sm:max-w-sm md:max-w-md">
-            <Pie data={pieData} />
+            {categories.map((cat) => {
+              const catTotal = expenses
+                .filter((e) => e.category === cat)
+                .reduce((sum, e) => sum + e.amount, 0);
+              return (
+                <div
+                  key={cat}
+                  className="bg-white border border-gray-200 px-4 py-3 rounded-lg shadow text-center"
+                >
+                  <p className="text-sm text-gray-600">{cat}</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    ₹{catTotal.toLocaleString()}
+                  </p>
+                </div>
+              );
+            })}
           </div>
-        </div>
 
-        {/* Line Chart */}
-        <div className="bg-white p-6 rounded-xl shadow-sm">
-          <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">
-            Expense Trend
-          </h4>
-          <div className="w-full h-[260px]">
-            <Line
-              data={trendData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: "bottom",
-                    labels: {
-                      padding: 20,
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Pie Chart */}
+            <div className="bg-white p-6 rounded-xl shadow-sm flex flex-col items-center justify-center">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+                Expense Distribution
+              </h4>
+              <div className="w-full flex justify-center items-center h-[260px] max-w-xs sm:max-w-sm md:max-w-md">
+                <Pie data={pieData} />
+              </div>
+            </div>
+
+            {/* Line Chart */}
+            <div className="bg-white p-6 rounded-xl shadow-sm">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+                Expense Trend
+              </h4>
+              <div className="w-full h-[260px]">
+                <Line
+                  data={trendData}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: "bottom",
+                        labels: {
+                          padding: 20,
+                        },
+                      },
                     },
-                  },
-                },
-              }}
-            />
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {expenses.map((e) => (
+              <div
+                key={e._id}
+                className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 flex flex-col justify-between"
+              >
+                <div className="mb-3">
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {e.title}
+                  </h3>
+                  <p className="text-sm text-gray-500">{e.category}</p>
+                  <p className="text-sm mt-1 text-gray-700">{e.note || "-"}</p>
+                </div>
+                <div className="flex items-center justify-between mt-auto">
+                  <div>
+                    <p className="text-base font-bold text-green-600">
+                      ₹{e.amount.toLocaleString()}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {format(new Date(e.expenseDate), "dd MMM yyyy")}
+                    </p>
+                  </div>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => handleEdit(e)}
+                      className="text-blue-600 hover:text-blue-800 text-sm transition cursor-pointer"
+                      title="Edit"
+                    >
+                      <FaEdit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(e._id)}
+                      className="text-red-500 hover:text-red-700 text-sm transition cursor-pointer"
+                      title="Delete"
+                    >
+                      <FaTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {expenses.map((e) => (
-          <div
-            key={e._id}
-            className="bg-white rounded-lg border border-gray-200 shadow-sm p-5 flex flex-col justify-between"
-          >
-            <div className="mb-3">
-              <h3 className="text-lg font-semibold text-gray-800">{e.title}</h3>
-              <p className="text-sm text-gray-500">{e.category}</p>
-              <p className="text-sm mt-1 text-gray-700">{e.note || "-"}</p>
-            </div>
-            <div className="flex items-center justify-between mt-auto">
-              <div>
-                <p className="text-base font-bold text-green-600">
-                  ₹{e.amount.toLocaleString()}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {format(new Date(e.expenseDate), "dd MMM yyyy")}
-                </p>
-              </div>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => handleEdit(e)}
-                  className="text-blue-600 hover:text-blue-800 text-sm transition cursor-pointer"
-                  title="Edit"
-                >
-                  <FaEdit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(e._id)}
-                  className="text-red-500 hover:text-red-700 text-sm transition cursor-pointer"
-                  title="Delete"
-                >
-                  <FaTrash className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      )}
 
       {!loading && expenses.length === 0 && (
         <p className="text-center text-gray-500 mt-8">
